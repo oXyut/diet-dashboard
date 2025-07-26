@@ -1,23 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
-
-const DATA_FILE = path.join(process.cwd(), 'data', 'health-data.json');
-
-async function ensureDataFile() {
-  try {
-    await fs.access(DATA_FILE);
-  } catch {
-    await fs.mkdir(path.dirname(DATA_FILE), { recursive: true });
-    await fs.writeFile(DATA_FILE, JSON.stringify({ data: [] }));
-  }
-}
+import { supabase, getSupabaseAdmin } from '@/lib/supabase';
 
 // CORS対応
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Headers': 'Content-Type, X-API-Key',
 };
 
 export async function OPTIONS() {
@@ -26,28 +14,52 @@ export async function OPTIONS() {
 
 export async function GET() {
   try {
-    await ensureDataFile();
-    const fileContent = await fs.readFile(DATA_FILE, 'utf-8');
-    let data;
-    try {
-      data = JSON.parse(fileContent || '{"data":[]}');
-    } catch (e) {
-      console.log('Initializing empty data file');
-      data = { data: [] };
+    const { data, error } = await supabase
+      .from('health_data')
+      .select('*')
+      .order('date', { ascending: false });
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500, headers: corsHeaders });
     }
-    return NextResponse.json(data, { headers: corsHeaders });
+
+    // 既存のフォーマットに変換
+    const formattedData = {
+      data: data.map(row => ({
+        id: row.id,
+        date: row.date,
+        weight: row.weight,
+        bodyFatPercentage: row.body_fat_percentage,
+        muscleMass: row.muscle_mass,
+        steps: row.steps,
+        activeCalories: row.active_calories,
+        restingCalories: row.resting_calories,
+        totalCalories: row.total_calories,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+      }))
+    };
+
+    return NextResponse.json(formattedData, { headers: corsHeaders });
   } catch (error) {
+    console.error('Error:', error);
     return NextResponse.json({ error: 'Failed to read data' }, { status: 500, headers: corsHeaders });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    // API Key認証
+    const apiKey = request.headers.get('x-api-key');
+    if (process.env.API_SECRET_KEY && apiKey !== process.env.API_SECRET_KEY) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
+    }
+
     // Content-Typeチェック
     const contentType = request.headers.get('content-type');
     console.log('=== API Health POST Request ===');
     console.log('Content-Type:', contentType);
-    console.log('Headers:', Object.fromEntries(request.headers.entries()));
     
     let body;
     
@@ -70,8 +82,6 @@ export async function POST(request: NextRequest) {
     }
     
     console.log('Parsed body:', JSON.stringify(body, null, 2));
-    
-    await ensureDataFile();
     
     // キー名の正規化（スペースのトリム）
     const normalizedBody: any = {};
@@ -100,65 +110,64 @@ export async function POST(request: NextRequest) {
     }
     
     // データ型の変換とバリデーション
-    // undefinedの場合はnull、値がある場合は数値に変換（0も有効な値として扱う）
     const processedData = {
       date: normalizedDate,
       weight: weight !== undefined ? Number(weight) : null,
-      bodyFatPercentage: bodyFatPercentage !== undefined ? Number(bodyFatPercentage) : null,
-      muscleMass: muscleMass !== undefined ? Number(muscleMass) : null,
+      body_fat_percentage: bodyFatPercentage !== undefined ? Number(bodyFatPercentage) : null,
+      muscle_mass: muscleMass !== undefined ? Number(muscleMass) : null,
       steps: steps !== undefined ? Number(steps) : null,
-      activeCalories: activeCalories !== undefined ? Number(activeCalories) : null,
-      restingCalories: restingCalories !== undefined ? Number(restingCalories) : null,
+      active_calories: activeCalories !== undefined ? Number(activeCalories) : null,
+      resting_calories: restingCalories !== undefined ? Number(restingCalories) : null,
     };
     
-    console.log('Processed data:', JSON.stringify(processedData, null, 2));
-    
-    const fileContent = await fs.readFile(DATA_FILE, 'utf-8');
-    let data;
-    try {
-      data = JSON.parse(fileContent || '{"data":[]}');
-    } catch (e) {
-      console.log('Initializing empty data file');
-      data = { data: [] };
-    }
-    
-    const existingIndex = data.data.findIndex((item: any) => item.date === processedData.date);
-    
-    // totalCaloriesの計算: 両方の値が存在する場合のみ計算
+    // totalCaloriesの計算
     let totalCalories = null;
-    if (processedData.activeCalories !== null && processedData.restingCalories !== null) {
-      totalCalories = processedData.activeCalories + processedData.restingCalories;
-    } else if (processedData.activeCalories !== null) {
-      // アクティブカロリーのみの場合（安静時カロリーが不明）
-      totalCalories = processedData.activeCalories;
-    } else if (processedData.restingCalories !== null) {
-      // 安静時カロリーのみの場合（アクティブカロリーが不明）
-      totalCalories = processedData.restingCalories;
+    if (processedData.active_calories !== null && processedData.resting_calories !== null) {
+      totalCalories = processedData.active_calories + processedData.resting_calories;
+    } else if (processedData.active_calories !== null) {
+      totalCalories = processedData.active_calories;
+    } else if (processedData.resting_calories !== null) {
+      totalCalories = processedData.resting_calories;
     }
     
-    const newEntry = {
-      id: existingIndex >= 0 ? data.data[existingIndex].id : Date.now().toString(),
-      ...processedData,
-      totalCalories,
-      createdAt: existingIndex >= 0 ? data.data[existingIndex].createdAt : new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    const supabaseAdmin = getSupabaseAdmin();
     
-    if (existingIndex >= 0) {
-      data.data[existingIndex] = newEntry;
-      console.log('Updated existing entry for date:', processedData.date);
-    } else {
-      data.data.push(newEntry);
-      console.log('Added new entry for date:', processedData.date);
+    // Upsert (存在する場合は更新、なければ挿入)
+    const { data, error } = await supabaseAdmin
+      .from('health_data')
+      .upsert({
+        ...processedData,
+        total_calories: totalCalories,
+      }, {
+        onConflict: 'date'
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return NextResponse.json({ error: 'Failed to save data' }, { status: 500, headers: corsHeaders });
     }
-    
-    data.data.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    
-    await fs.writeFile(DATA_FILE, JSON.stringify(data, null, 2));
+
     console.log('Data saved successfully');
     console.log('==============================\n');
     
-    return NextResponse.json(newEntry, { headers: corsHeaders });
+    // レスポンスを既存のフォーマットに合わせる
+    const response = {
+      id: data.id,
+      date: data.date,
+      weight: data.weight,
+      bodyFatPercentage: data.body_fat_percentage,
+      muscleMass: data.muscle_mass,
+      steps: data.steps,
+      activeCalories: data.active_calories,
+      restingCalories: data.resting_calories,
+      totalCalories: data.total_calories,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+    
+    return NextResponse.json(response, { headers: corsHeaders });
   } catch (error: any) {
     console.error('=== API Health POST Error ===');
     console.error('Error:', error);
