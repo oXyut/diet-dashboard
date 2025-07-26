@@ -1,0 +1,239 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { format, subDays, parseISO } from 'date-fns';
+import { ja } from 'date-fns/locale';
+import { TrendingDown, TrendingUp, Activity, Flame, Weight, Percent, Plus, FileText } from 'lucide-react';
+import Link from 'next/link';
+import { HealthData, DailyHealthMetrics } from '@/types/health';
+import { CustomTooltip } from './CustomTooltip';
+
+export default function Dashboard() {
+  const [healthData, setHealthData] = useState<HealthData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState(30);
+
+  useEffect(() => {
+    fetchHealthData();
+    // 5秒ごとに自動更新（デバッグ用）
+    const interval = setInterval(fetchHealthData, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchHealthData = async () => {
+    try {
+      const response = await fetch('/api/health');
+      const data = await response.json();
+      setHealthData(data.data || []);
+    } catch (error) {
+      console.error('Failed to fetch health data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const processDataForCharts = () => {
+    const cutoffDate = subDays(new Date(), dateRange);
+    
+    const filteredData = healthData
+      .filter(item => new Date(item.date) >= cutoffDate)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    return filteredData.map(item => ({
+      date: format(new Date(item.date), 'MM/dd', { locale: ja }),
+      weight: item.weight,
+      bodyFat: item.bodyFatPercentage,
+      muscleMass: item.muscleMass,
+      steps: item.steps,
+      calories: item.totalCalories,
+    }));
+  };
+
+  const getLatestMetrics = () => {
+    if (healthData.length === 0) return null;
+    
+    const latest = healthData[0];
+    const previous = healthData[1];
+    
+    const weightChange = latest.weight && previous?.weight 
+      ? latest.weight - previous.weight 
+      : 0;
+    
+    return {
+      weight: latest.weight,
+      weightChange,
+      bodyFat: latest.bodyFatPercentage,
+      steps: latest.steps,
+      calories: latest.totalCalories,
+    };
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">読み込み中...</div>
+      </div>
+    );
+  }
+
+  const chartData = processDataForCharts();
+  const latestMetrics = getLatestMetrics();
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">ダイエットダッシュボード</h1>
+          <div className="flex gap-2">
+            <Link href="/import" className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 flex items-center">
+              <FileText className="w-4 h-4 mr-2" />
+              CSVインポート
+            </Link>
+            <Link href="/input" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center">
+              <Plus className="w-4 h-4 mr-2" />
+              データ入力
+            </Link>
+          </div>
+        </div>
+        
+        <div className="mb-6">
+          <select 
+            value={dateRange} 
+            onChange={(e) => setDateRange(Number(e.target.value))}
+            className="px-4 py-2 border border-gray-300 rounded-lg"
+          >
+            <option value={7}>過去7日間</option>
+            <option value={30}>過去30日間</option>
+            <option value={90}>過去90日間</option>
+          </select>
+        </div>
+
+        {latestMetrics && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">体重</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {latestMetrics.weight !== null && latestMetrics.weight !== undefined 
+                      ? `${latestMetrics.weight.toFixed(1)} kg` 
+                      : '-'}
+                  </p>
+                  {latestMetrics.weight !== null && latestMetrics.weight !== undefined && latestMetrics.weightChange !== 0 && (
+                    <p className={`text-sm ${latestMetrics.weightChange > 0 ? 'text-red-600' : 'text-green-600'} flex items-center mt-1`}>
+                      {latestMetrics.weightChange > 0 ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
+                      {Math.abs(latestMetrics.weightChange).toFixed(1)} kg
+                    </p>
+                  )}
+                </div>
+                <Weight className="w-8 h-8 text-blue-500" />
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">体脂肪率</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {latestMetrics.bodyFat !== null && latestMetrics.bodyFat !== undefined 
+                      ? `${latestMetrics.bodyFat.toFixed(1)}%` 
+                      : '-'}
+                  </p>
+                </div>
+                <Percent className="w-8 h-8 text-purple-500" />
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">歩数</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {latestMetrics.steps !== null && latestMetrics.steps !== undefined 
+                      ? latestMetrics.steps.toLocaleString() 
+                      : '-'}
+                  </p>
+                </div>
+                <Activity className="w-8 h-8 text-green-500" />
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">消費カロリー</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {latestMetrics.calories !== null && latestMetrics.calories !== undefined 
+                      ? `${latestMetrics.calories.toLocaleString()} kcal` 
+                      : '-'}
+                  </p>
+                </div>
+                <Flame className="w-8 h-8 text-orange-500" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">体重推移</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Line type="monotone" dataKey="weight" stroke="#3B82F6" name="体重 (kg)" connectNulls={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">体組成</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Line type="monotone" dataKey="bodyFat" stroke="#8B5CF6" name="体脂肪率 (%)" connectNulls={false} />
+                <Line type="monotone" dataKey="muscleMass" stroke="#10B981" name="筋肉量 (kg)" connectNulls={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">日々の活動量</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Bar dataKey="steps" fill="#10B981" name="歩数" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">消費カロリー</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Area type="monotone" dataKey="calories" stroke="#F97316" fill="#F97316" fillOpacity={0.6} name="消費カロリー (kcal)" connectNulls={false} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
