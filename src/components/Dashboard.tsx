@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { format, subDays, parseISO } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import { TrendingDown, TrendingUp, Activity, Flame, Weight, Percent, Plus, FileText } from 'lucide-react';
-import Link from 'next/link';
+import { TrendingDown, TrendingUp, Activity, Flame, Weight, Percent } from 'lucide-react';
 import { HealthData, DailyHealthMetrics } from '@/types/health';
 import { CustomTooltip } from './CustomTooltip';
 
@@ -85,16 +84,6 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">ダイエットダッシュボード</h1>
-          <div className="flex gap-2">
-            <Link href="/import" className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 flex items-center">
-              <FileText className="w-4 h-4 mr-2" />
-              CSVインポート
-            </Link>
-            <Link href="/input" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center">
-              <Plus className="w-4 h-4 mr-2" />
-              データ入力
-            </Link>
-          </div>
         </div>
         
         <div className="mb-6">
