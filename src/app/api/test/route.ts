@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return NextResponse.json({ 
       status: 'error',
-      error: error.message 
+      error: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
 }
