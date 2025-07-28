@@ -1,5 +1,6 @@
 import { Goal, HealthData } from '@/types/health';
-import { parseISO, differenceInDays, addDays, format } from 'date-fns';
+import { parseISO, differenceInDays, subDays, format } from 'date-fns';
+import { ja } from 'date-fns/locale';
 
 /**
  * 線形減少の目標線データを計算する
@@ -15,41 +16,60 @@ export function calculateLinearWeightGoal(
 
   const startDate = parseISO(goal.start_date);
   const endDate = parseISO(goal.end_date);
-  const today = new Date();
   
-  // 開始時の体重を取得（最も古いデータまたは推定値）
-  const sortedHealthData = [...healthData].sort((a, b) => 
-    new Date(a.date).getTime() - new Date(b.date).getTime()
-  );
+  // 開始時の体重を推定（最も古いデータを使用、または現在のデータから推定）
+  const sortedHealthData = [...healthData]
+    .filter(d => d.weight !== null && d.weight !== undefined)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   
-  let startWeight = goal.target_weight_kg + 20; // デフォルト推定値
+  let startWeight = goal.target_weight_kg + 15; // デフォルト推定値
   
-  // 目標開始日に近いデータを探す
-  const startDateStr = startDate.toISOString().split('T')[0];
-  const nearStartData = sortedHealthData.find(data => data.date >= startDateStr);
-  if (nearStartData && nearStartData.weight) {
-    startWeight = nearStartData.weight;
-  } else if (sortedHealthData.length > 0 && sortedHealthData[0].weight) {
-    // 最古のデータを使用
-    startWeight = sortedHealthData[0].weight;
+  if (sortedHealthData.length > 0) {
+    // 最古のデータがある場合はそれを使用
+    const oldestData = sortedHealthData[0];
+    startWeight = oldestData.weight!;
+    
+    // もし開始日より後のデータしかない場合は、現在の減量ペースから逆算
+    const oldestDate = new Date(oldestData.date);
+    if (oldestDate > startDate && sortedHealthData.length > 1) {
+      const recentData = sortedHealthData[sortedHealthData.length - 1];
+      const daysBetween = differenceInDays(new Date(recentData.date), oldestDate);
+      if (daysBetween > 0) {
+        const weightLossRate = (oldestData.weight! - recentData.weight!) / daysBetween;
+        const daysFromStartToOldest = differenceInDays(oldestDate, startDate);
+        startWeight = oldestData.weight! + (weightLossRate * daysFromStartToOldest);
+      }
+    }
   }
 
-  const totalDays = differenceInDays(endDate, startDate) + 1;
-  const weightLossPerDay = (startWeight - goal.target_weight_kg) / totalDays;
+  const totalDays = differenceInDays(endDate, startDate);
+  const dailyWeightLoss = (startWeight - goal.target_weight_kg) / totalDays;
 
-  // 表示範囲の日付を生成
-  const cutoffDate = new Date();
-  cutoffDate.setDate(cutoffDate.getDate() - dateRange);
-  
+  console.log('🎯 Weight Goal Calculation:', {
+    startDate: goal.start_date,
+    endDate: goal.end_date,
+    startWeight,
+    targetWeight: goal.target_weight_kg,
+    totalDays,
+    dailyWeightLoss
+  });
+
+  // 表示範囲の日付を生成（健康データと同じ形式に合わせる）
+  const cutoffDate = subDays(new Date(), dateRange);
   const result: Array<{ date: string; targetWeight: number; linearTarget: number }> = [];
   
-  for (let i = 0; i <= dateRange + 30; i++) { // 未来の予測も含める
-    const currentDate = addDays(cutoffDate, i);
-    if (currentDate > endDate) break;
+  // dateRangeの日数分データを生成
+  for (let i = 0; i <= dateRange; i++) {
+    const currentDate = subDays(new Date(), dateRange - i);
     
-    const dateStr = format(currentDate, 'MM/dd');
-    const daysSinceStart = Math.max(0, differenceInDays(currentDate, startDate));
-    const linearTarget = startWeight - (weightLossPerDay * daysSinceStart);
+    // 目標期間外は計算しない
+    if (currentDate < startDate || currentDate > endDate) {
+      continue;
+    }
+    
+    const dateStr = format(currentDate, 'MM/dd', { locale: ja });
+    const daysSinceStart = differenceInDays(currentDate, startDate);
+    const linearTarget = startWeight - (dailyWeightLoss * daysSinceStart);
     
     result.push({
       date: dateStr,

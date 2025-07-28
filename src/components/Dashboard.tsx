@@ -413,7 +413,10 @@ export default function Dashboard() {
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
-                    <YAxis />
+                    <YAxis domain={goalProgress?.goal.target_weight_kg ? [
+                      Math.floor(goalProgress.goal.target_weight_kg * 0.9),
+                      Math.ceil(goalProgress.goal.target_weight_kg * 1.2)
+                    ] : ['dataMin - 5', 'dataMax + 5']} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
                     <Line type="monotone" dataKey="weight" stroke="#3B82F6" name="実際の体重 (kg)" connectNulls={false} strokeWidth={2} />
@@ -487,7 +490,10 @@ export default function Dashboard() {
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
-                    <YAxis />
+                    <YAxis domain={goalProgress?.goal.target_weight_kg ? [
+                      Math.floor(goalProgress.goal.target_weight_kg * 0.9),
+                      Math.ceil(goalProgress.goal.target_weight_kg * 1.2)
+                    ] : ['dataMin - 5', 'dataMax + 5']} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
                     <Line type="monotone" dataKey="weight" stroke="#3B82F6" name="実際の体重 (kg)" connectNulls={false} strokeWidth={2} />
