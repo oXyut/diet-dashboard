@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Achievement</title>
+</head>
+<body>
+    <h1>Achievement Debug</h1>
+    <div id="result"></div>
+    
+    <script>
+        async function debugAchievement() {
+            const healthRes = await fetch('http://localhost:3000/api/health');
+            const healthData = await healthRes.json();
+            
+            const goalsRes = await fetch('http://localhost:3000/api/goals?active=true');
+            const goalsData = await goalsRes.json();
+            
+            const latest = healthData.data[0];
+            const goal = goalsData.data[0];
+            
+            const result = document.getElementById('result');
+            
+            // 炭水化物の判定
+            let carbStatus = 'no_data';
+            if (latest.carbohydrateG != null) {
+                if (latest.carbohydrateG < goal.daily_carb_min_g) {
+                    carbStatus = 'under';
+                } else if (latest.carbohydrateG > goal.daily_carb_max_g) {
+                    carbStatus = 'over';
+                } else {
+                    carbStatus = 'within';
+                }
+            }
+            
+            result.innerHTML = `
+                <h2>Latest Data (${latest.date})</h2>
+                <p>Carbohydrate: ${latest.carbohydrateG}g</p>
+                <p>Goal: ${goal.daily_carb_min_g} - ${goal.daily_carb_max_g}g</p>
+                <p>Status: ${carbStatus} (${
+                    carbStatus === 'under' ? '不足' : 
+                    carbStatus === 'over' ? '超過' : 
+                    carbStatus === 'within' ? '目標範囲内' : 'データなし'
+                })</p>
+                <p style="color: ${carbStatus === 'over' ? 'red' : 'black'}">
+                    ${latest.carbohydrateG} > ${goal.daily_carb_max_g} = ${latest.carbohydrateG > goal.daily_carb_max_g}
+                </p>
+                
+                <h2>All Health Data</h2>
+                <pre>${JSON.stringify(healthData.data.map(d => ({
+                    date: d.date,
+                    carb: d.carbohydrateG
+                })), null, 2)}</pre>
+            `;
+        }
+        
+        debugAchievement();
+    </script>
+</body>
+</html>

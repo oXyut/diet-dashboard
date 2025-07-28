@@ -29,6 +29,17 @@ export function MetricsCard({
   const hasTarget = targetMin !== undefined || targetMax !== undefined || targetValue !== undefined;
   const achievementColor = getAchievementColor(achievement);
   const achievementText = getAchievementText(achievement);
+  
+  // デバッグ情報
+  if (title === '炭水化物') {
+    console.log('🍞 MetricsCard - 炭水化物:', {
+      value,
+      targetMin,
+      targetMax,
+      achievement,
+      achievementText
+    });
+  }
 
   return (
     <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow">

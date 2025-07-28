@@ -74,6 +74,20 @@ function evaluateDailyAchievements(
     healthData.fatG,
     healthData.carbohydrateG
   );
+  
+  // デバッグ：炭水化物の評価
+  const carbResult = evaluateRange(
+    healthData.carbohydrateG,
+    goal.daily_carb_min_g,
+    goal.daily_carb_max_g
+  );
+  
+  console.log('🥖 evaluateDailyAchievements - Carbohydrate:', {
+    value: healthData.carbohydrateG,
+    min: goal.daily_carb_min_g,
+    max: goal.daily_carb_max_g,
+    result: carbResult
+  });
 
   return {
     calories: evaluateRange(
@@ -91,11 +105,7 @@ function evaluateDailyAchievements(
       goal.daily_fat_min_g,
       goal.daily_fat_max_g
     ),
-    carbohydrate: evaluateRange(
-      healthData.carbohydrateG,
-      goal.daily_carb_min_g,
-      goal.daily_carb_max_g
-    ),
+    carbohydrate: carbResult,
     steps: evaluateSteps(healthData.steps, goal.daily_steps_target),
   };
 }

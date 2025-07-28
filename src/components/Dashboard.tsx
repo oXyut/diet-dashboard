@@ -83,7 +83,19 @@ export default function Dashboard() {
       // 目標データの妥当性確認
       if (activeGoal && activeGoal.start_date && activeGoal.end_date) {
         try {
+          console.log('🎯 useEffect - Before calculation:', {
+            yesterdayStr,
+            targetHealthDataDate: targetHealthData.date,
+            targetHealthDataCarb: targetHealthData.carbohydrateG,
+            allHealthDates: healthData.map(d => ({ date: d.date, carb: d.carbohydrateG }))
+          });
+          
           const progress = calculateGoalProgress(activeGoal, targetHealthData);
+          console.log('🎯 useEffect - Calculated progress:', {
+            targetHealthData: targetHealthData.date,
+            carb: targetHealthData.carbohydrateG,
+            carbAchievement: progress.dailyAchievements.carbohydrate
+          });
           setGoalProgress(progress);
         } catch (error) {
           console.error('Failed to calculate goal progress:', error);
@@ -345,7 +357,17 @@ export default function Dashboard() {
               value={latestMetrics.carbohydrate}
               unit="g"
               icon={<Wheat className="w-8 h-8 text-amber-600" />}
-              achievement={goalProgress?.dailyAchievements.carbohydrate}
+              achievement={(() => {
+                const achievement = goalProgress?.dailyAchievements.carbohydrate;
+                console.log('🌾 Dashboard render - Carbohydrate achievement:', {
+                  latestMetricsCarb: latestMetrics.carbohydrate,
+                  latestMetricsDate: latestMetrics.date,
+                  goalProgressCarb: goalProgress?.dailyAchievements.carbohydrate,
+                  goalProgressCurrentWeight: goalProgress?.currentWeight,
+                  fullGoalProgress: goalProgress
+                });
+                return achievement;
+              })()}
               targetMin={goalProgress?.goal.daily_carb_min_g}
               targetMax={goalProgress?.goal.daily_carb_max_g}
             />
