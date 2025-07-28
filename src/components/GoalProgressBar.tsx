@@ -1,14 +1,13 @@
 import React from 'react';
 import { Target, TrendingUp, TrendingDown, Calendar } from 'lucide-react';
 import { GoalProgress } from '@/types/health';
-import { getAchievementColor, getAchievementText } from '@/lib/utils/goalCalculator';
 
 interface GoalProgressBarProps {
   progress: GoalProgress;
 }
 
 export default function GoalProgressBar({ progress }: GoalProgressBarProps) {
-  const { goal, currentWeight, daysRemaining, totalDays, progressPercentage, isOnTrack, dailyAchievements } = progress;
+  const { goal, currentWeight, daysRemaining, totalDays, progressPercentage, isOnTrack } = progress;
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-lg border-l-4 border-blue-500">
@@ -79,61 +78,6 @@ export default function GoalProgressBar({ progress }: GoalProgressBarProps) {
         </div>
       </div>
 
-      {/* 日々の達成状況 */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">昨日の達成状況</h3>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <div className={`p-3 rounded-lg border ${getAchievementColor(dailyAchievements.calories)}`}>
-            <p className="text-xs font-medium mb-1">摂取カロリー</p>
-            <p className="text-sm font-semibold">{getAchievementText(dailyAchievements.calories)}</p>
-            {goal.daily_calorie_intake_min && goal.daily_calorie_intake_max && (
-              <p className="text-xs mt-1">
-                目標: {goal.daily_calorie_intake_min}-{goal.daily_calorie_intake_max}kcal
-              </p>
-            )}
-          </div>
-          
-          <div className={`p-3 rounded-lg border ${getAchievementColor(dailyAchievements.protein)}`}>
-            <p className="text-xs font-medium mb-1">タンパク質</p>
-            <p className="text-sm font-semibold">{getAchievementText(dailyAchievements.protein)}</p>
-            {goal.daily_protein_min_g && goal.daily_protein_max_g && (
-              <p className="text-xs mt-1">
-                目標: {goal.daily_protein_min_g}-{goal.daily_protein_max_g}g
-              </p>
-            )}
-          </div>
-          
-          <div className={`p-3 rounded-lg border ${getAchievementColor(dailyAchievements.fat)}`}>
-            <p className="text-xs font-medium mb-1">脂質</p>
-            <p className="text-sm font-semibold">{getAchievementText(dailyAchievements.fat)}</p>
-            {goal.daily_fat_min_g && goal.daily_fat_max_g && (
-              <p className="text-xs mt-1">
-                目標: {goal.daily_fat_min_g}-{goal.daily_fat_max_g}g
-              </p>
-            )}
-          </div>
-          
-          <div className={`p-3 rounded-lg border ${getAchievementColor(dailyAchievements.carbohydrate)}`}>
-            <p className="text-xs font-medium mb-1">炭水化物</p>
-            <p className="text-sm font-semibold">{getAchievementText(dailyAchievements.carbohydrate)}</p>
-            {goal.daily_carb_min_g && goal.daily_carb_max_g && (
-              <p className="text-xs mt-1">
-                目標: {goal.daily_carb_min_g}-{goal.daily_carb_max_g}g
-              </p>
-            )}
-          </div>
-          
-          <div className={`p-3 rounded-lg border ${getAchievementColor(dailyAchievements.steps)}`}>
-            <p className="text-xs font-medium mb-1">歩数</p>
-            <p className="text-sm font-semibold">{getAchievementText(dailyAchievements.steps)}</p>
-            {goal.daily_steps_target && (
-              <p className="text-xs mt-1">
-                目標: {goal.daily_steps_target.toLocaleString()}歩
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

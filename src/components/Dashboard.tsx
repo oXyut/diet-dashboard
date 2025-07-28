@@ -10,6 +10,7 @@ import { CustomTooltip } from './CustomTooltip';
 import { calculateIntakeCalories, calculatePFCRatio } from '@/lib/utils/calorieCalculator';
 import { calculateGoalProgress } from '@/lib/utils/goalCalculator';
 import { getYesterdayInJST } from '@/lib/utils/dateUtils';
+import { MetricsCard } from './MetricsCard';
 import GoalProgressBar from './GoalProgressBar';
 import GoalComparisonChart from './GoalComparisonChart';
 import Footer from './Footer';
@@ -294,7 +295,8 @@ export default function Dashboard() {
             </div>
 
         {latestMetrics && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {/* 体重カード */}
             <div className="bg-white p-6 rounded-lg shadow">
               <div className="flex items-center justify-between">
                 <div>
@@ -315,6 +317,7 @@ export default function Dashboard() {
               </div>
             </div>
 
+            {/* 体脂肪率カード */}
             <div className="bg-white p-6 rounded-lg shadow">
               <div className="flex items-center justify-between">
                 <div>
@@ -329,99 +332,66 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">歩数</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {latestMetrics.steps !== null && latestMetrics.steps !== undefined 
-                      ? latestMetrics.steps.toLocaleString() 
-                      : '-'}
-                  </p>
-                </div>
-                <Activity className="w-8 h-8 text-green-500" />
-              </div>
-            </div>
+            {/* 統合されたメトリクスカード */}
+            <MetricsCard
+              title="歩数"
+              value={latestMetrics.steps}
+              unit="歩"
+              icon={<Activity className="w-8 h-8 text-green-500" />}
+              achievement={goalProgress?.dailyAchievements.steps}
+              targetValue={goalProgress?.goal.daily_steps_target}
+            />
 
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">消費カロリー</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {latestMetrics.calories !== null && latestMetrics.calories !== undefined 
-                      ? `${latestMetrics.calories.toLocaleString()} kcal` 
-                      : '-'}
-                  </p>
-                </div>
-                <Flame className="w-8 h-8 text-orange-500" />
-              </div>
-            </div>
+            <MetricsCard
+              title="摂取カロリー"
+              value={latestMetrics.intakeCalories}
+              unit="kcal"
+              icon={<Calculator className="w-8 h-8 text-indigo-500" />}
+              achievement={goalProgress?.dailyAchievements.calories}
+              targetMin={goalProgress?.goal.daily_calorie_intake_min}
+              targetMax={goalProgress?.goal.daily_calorie_intake_max}
+              ratio={latestMetrics.pfcRatio}
+            />
 
-            {/* PFC栄養素カード */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">タンパク質</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {latestMetrics.protein !== null && latestMetrics.protein !== undefined 
-                      ? `${latestMetrics.protein.toFixed(1)}g` 
-                      : '-'}
-                  </p>
-                </div>
-                <Beef className="w-8 h-8 text-red-500" />
-              </div>
-            </div>
+            <MetricsCard
+              title="タンパク質"
+              value={latestMetrics.protein}
+              unit="g"
+              icon={<Beef className="w-8 h-8 text-red-500" />}
+              achievement={goalProgress?.dailyAchievements.protein}
+              targetMin={goalProgress?.goal.daily_protein_min_g}
+              targetMax={goalProgress?.goal.daily_protein_max_g}
+            />
 
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">脂質</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {latestMetrics.fat !== null && latestMetrics.fat !== undefined 
-                      ? `${latestMetrics.fat.toFixed(1)}g` 
-                      : '-'}
-                  </p>
-                </div>
-                <Sandwich className="w-8 h-8 text-yellow-500" />
-              </div>
-            </div>
+            <MetricsCard
+              title="脂質"
+              value={latestMetrics.fat}
+              unit="g"
+              icon={<Sandwich className="w-8 h-8 text-yellow-500" />}
+              achievement={goalProgress?.dailyAchievements.fat}
+              targetMin={goalProgress?.goal.daily_fat_min_g}
+              targetMax={goalProgress?.goal.daily_fat_max_g}
+            />
 
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">炭水化物</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {latestMetrics.carbohydrate !== null && latestMetrics.carbohydrate !== undefined 
-                      ? `${latestMetrics.carbohydrate.toFixed(1)}g` 
-                      : '-'}
-                  </p>
-                </div>
-                <Wheat className="w-8 h-8 text-amber-600" />
-              </div>
-            </div>
+            <MetricsCard
+              title="炭水化物"
+              value={latestMetrics.carbohydrate}
+              unit="g"
+              icon={<Wheat className="w-8 h-8 text-amber-600" />}
+              achievement={goalProgress?.dailyAchievements.carbohydrate}
+              targetMin={goalProgress?.goal.daily_carb_min_g}
+              targetMax={goalProgress?.goal.daily_carb_max_g}
+            />
 
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">摂取カロリー</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {latestMetrics.intakeCalories !== null && latestMetrics.intakeCalories !== undefined 
-                      ? `${latestMetrics.intakeCalories.toFixed(0)} kcal` 
-                      : '-'}
-                  </p>
-                  {latestMetrics.pfcRatio && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      P:{latestMetrics.pfcRatio.protein.toFixed(0)}% 
-                      F:{latestMetrics.pfcRatio.fat.toFixed(0)}% 
-                      C:{latestMetrics.pfcRatio.carbohydrate.toFixed(0)}%
-                    </p>
-                  )}
-                </div>
-                <Calculator className="w-8 h-8 text-indigo-500" />
-              </div>
-            </div>
+            {/* 消費カロリー（目標なし） */}
+            <MetricsCard
+              title="消費カロリー"
+              value={latestMetrics.calories}
+              unit="kcal"
+              icon={<Flame className="w-8 h-8 text-orange-500" />}
+            />
           </div>
-            )}
+        )}
             
             {/* 基本的なグラフ表示 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
