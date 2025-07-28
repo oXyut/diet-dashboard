@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { format, subDays, parseISO } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import { TrendingDown, TrendingUp, Activity, Flame, Weight, Percent, Beef, Wheat, Sandwich, Calculator } from 'lucide-react';
+import { TrendingDown, TrendingUp, Activity, Flame, Weight, Percent, Beef, Wheat, Sandwich, Calculator, Info } from 'lucide-react';
 import { HealthData, DailyHealthMetrics } from '@/types/health';
 import { CustomTooltip } from './CustomTooltip';
 import { calculateIntakeCalories, calculatePFCRatio } from '@/lib/utils/calorieCalculator';
@@ -105,7 +105,18 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold text-gray-900">ダイエットダッシュボード</h1>
         </div>
         
-        <div className="mb-6">
+        <div className="mb-6 space-y-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+            <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-blue-800">
+              <p className="font-semibold mb-1">食事の詳細情報について</p>
+              <p>詳しい食事内容や栄養バランスは「あすけん」アプリでご確認いただけます。</p>
+              {process.env.NEXT_PUBLIC_ASKEN_MEMBER_ID && (
+                <p className="mt-1 text-xs">会員ID: {process.env.NEXT_PUBLIC_ASKEN_MEMBER_ID}</p>
+              )}
+            </div>
+          </div>
+          
           <select 
             value={dateRange} 
             onChange={(e) => setDateRange(Number(e.target.value))}
