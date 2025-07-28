@@ -8,6 +8,14 @@ export const healthDataSchema = z.object({
   steps: z.number().int().nonnegative().nullable().optional(),
   activeCalories: z.number().int().nonnegative().nullable().optional(),
   restingCalories: z.number().int().nonnegative().nullable().optional(),
+  // PFC栄養素
+  proteinG: z.number().nonnegative().nullable().optional(),
+  fatG: z.number().nonnegative().nullable().optional(),
+  carbohydrateG: z.number().nonnegative().nullable().optional(),
+  // その他の栄養素
+  fiberG: z.number().nonnegative().nullable().optional(),
+  sugarG: z.number().nonnegative().nullable().optional(),
+  sodiumMg: z.number().nonnegative().nullable().optional(),
 })
 
 export type HealthDataInput = z.infer<typeof healthDataSchema>

@@ -21,6 +21,15 @@ model HealthData {
   activeCalories    Int?     @map("active_calories")
   restingCalories   Int?     @map("resting_calories")
   totalCalories     Int?     @map("total_calories")
+  // PFC栄養素
+  proteinG          Decimal? @map("protein_g") @db.Decimal(6, 2)
+  fatG              Decimal? @map("fat_g") @db.Decimal(6, 2)
+  carbohydrateG     Decimal? @map("carbohydrate_g") @db.Decimal(6, 2)
+  // その他の栄養素
+  fiberG            Decimal? @map("fiber_g") @db.Decimal(5, 2)
+  sugarG            Decimal? @map("sugar_g") @db.Decimal(5, 2)
+  sodiumMg          Decimal? @map("sodium_mg") @db.Decimal(7, 2)
+  
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
   

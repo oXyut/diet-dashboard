@@ -61,6 +61,14 @@ export class SupabaseHealthDataRepository implements IHealthDataRepository {
       active_calories: data.activeCalories,
       resting_calories: data.restingCalories,
       total_calories: data.totalCalories,
+      // PFC栄養素
+      protein_g: data.proteinG,
+      fat_g: data.fatG,
+      carbohydrate_g: data.carbohydrateG,
+      // その他の栄養素
+      fiber_g: data.fiberG,
+      sugar_g: data.sugarG,
+      sodium_mg: data.sodiumMg,
     }
 
     const { data: result, error } = await supabaseAdmin
@@ -88,6 +96,14 @@ export class SupabaseHealthDataRepository implements IHealthDataRepository {
       steps: data.steps,
       active_calories: data.activeCalories,
       resting_calories: data.restingCalories,
+      // PFC栄養素
+      protein_g: data.proteinG,
+      fat_g: data.fatG,
+      carbohydrate_g: data.carbohydrateG,
+      // その他の栄養素
+      fiber_g: data.fiberG,
+      sugar_g: data.sugarG,
+      sodium_mg: data.sodiumMg,
     }
 
     const { data: result, error } = await supabaseAdmin
@@ -128,6 +144,14 @@ export class SupabaseHealthDataRepository implements IHealthDataRepository {
       activeCalories: row.active_calories,
       restingCalories: row.resting_calories,
       totalCalories: row.total_calories,
+      // PFC栄養素
+      proteinG: row.protein_g,
+      fatG: row.fat_g,
+      carbohydrateG: row.carbohydrate_g,
+      // その他の栄養素
+      fiberG: row.fiber_g,
+      sugarG: row.sugar_g,
+      sodiumMg: row.sodium_mg,
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
     }
