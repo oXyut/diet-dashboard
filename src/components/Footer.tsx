@@ -3,6 +3,11 @@ import { Github, Calendar } from 'lucide-react';
 const updates = [
   {
     date: '2025-07-28',
+    title: '目標トラッキング機能',
+    description: '体重・栄養・歩数目標の設定と進捗可視化、日々の達成状況表示機能を追加'
+  },
+  {
+    date: '2025-07-28',
     title: 'あすけんアプリ連携情報追加',
     description: '食事の詳細情報を「あすけん」アプリで確認できることを明記'
   },
