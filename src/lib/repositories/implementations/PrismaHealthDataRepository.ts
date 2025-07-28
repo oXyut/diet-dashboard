@@ -33,6 +33,14 @@ export class PrismaHealthDataRepository implements IHealthDataRepository {
         activeCalories: data.activeCalories,
         restingCalories: data.restingCalories,
         totalCalories: data.totalCalories,
+        // PFC栄養素
+        proteinG: data.proteinG,
+        fatG: data.fatG,
+        carbohydrateG: data.carbohydrateG,
+        // その他の栄養素
+        fiberG: data.fiberG,
+        sugarG: data.sugarG,
+        sodiumMg: data.sodiumMg,
       },
       create: {
         date: dateObj,
@@ -43,6 +51,14 @@ export class PrismaHealthDataRepository implements IHealthDataRepository {
         activeCalories: data.activeCalories,
         restingCalories: data.restingCalories,
         totalCalories: data.totalCalories,
+        // PFC栄養素
+        proteinG: data.proteinG,
+        fatG: data.fatG,
+        carbohydrateG: data.carbohydrateG,
+        // その他の栄養素
+        fiberG: data.fiberG,
+        sugarG: data.sugarG,
+        sodiumMg: data.sodiumMg,
       }
     })
   }
@@ -57,6 +73,14 @@ export class PrismaHealthDataRepository implements IHealthDataRepository {
         steps: data.steps,
         activeCalories: data.activeCalories,
         restingCalories: data.restingCalories,
+        // PFC栄養素
+        proteinG: data.proteinG,
+        fatG: data.fatG,
+        carbohydrateG: data.carbohydrateG,
+        // その他の栄養素
+        fiberG: data.fiberG,
+        sugarG: data.sugarG,
+        sodiumMg: data.sodiumMg,
       }
     })
   }

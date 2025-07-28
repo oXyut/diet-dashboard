@@ -1,13 +1,21 @@
 export interface HealthData {
   id: string;
   date: string;
-  weight?: number;
-  bodyFatPercentage?: number;
-  muscleMass?: number;
-  steps?: number;
-  activeCalories?: number;
-  restingCalories?: number;
-  totalCalories?: number;
+  weight?: number | null;
+  bodyFatPercentage?: number | null;
+  muscleMass?: number | null;
+  steps?: number | null;
+  activeCalories?: number | null;
+  restingCalories?: number | null;
+  totalCalories?: number | null;
+  // PFC栄養素
+  proteinG?: number | null;
+  fatG?: number | null;
+  carbohydrateG?: number | null;
+  // その他の栄養素
+  fiberG?: number | null;
+  sugarG?: number | null;
+  sodiumMg?: number | null;
   createdAt: string;
   updatedAt: string;
 }

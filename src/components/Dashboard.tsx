@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { format, subDays, parseISO } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import { TrendingDown, TrendingUp, Activity, Flame, Weight, Percent } from 'lucide-react';
+import { TrendingDown, TrendingUp, Activity, Flame, Weight, Percent, Beef, Wheat, Sandwich } from 'lucide-react';
 import { HealthData, DailyHealthMetrics } from '@/types/health';
 import { CustomTooltip } from './CustomTooltip';
 
@@ -46,6 +46,14 @@ export default function Dashboard() {
       muscleMass: item.muscleMass,
       steps: item.steps,
       calories: item.totalCalories,
+      // PFC栄養素
+      protein: item.proteinG,
+      fat: item.fatG,
+      carbohydrate: item.carbohydrateG,
+      // その他の栄養素
+      fiber: item.fiberG,
+      sugar: item.sugarG,
+      sodium: item.sodiumMg,
     }));
   };
 
@@ -65,6 +73,10 @@ export default function Dashboard() {
       bodyFat: latest.bodyFatPercentage,
       steps: latest.steps,
       calories: latest.totalCalories,
+      // PFC栄養素
+      protein: latest.proteinG,
+      fat: latest.fatG,
+      carbohydrate: latest.carbohydrateG,
     };
   };
 
@@ -99,7 +111,7 @@ export default function Dashboard() {
         </div>
 
         {latestMetrics && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-8">
             <div className="bg-white p-6 rounded-lg shadow">
               <div className="flex items-center justify-between">
                 <div>
@@ -161,6 +173,49 @@ export default function Dashboard() {
                 <Flame className="w-8 h-8 text-orange-500" />
               </div>
             </div>
+
+            {/* PFC栄養素カード */}
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">タンパク質</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {latestMetrics.protein !== null && latestMetrics.protein !== undefined 
+                      ? `${latestMetrics.protein.toFixed(1)}g` 
+                      : '-'}
+                  </p>
+                </div>
+                <Beef className="w-8 h-8 text-red-500" />
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">脂質</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {latestMetrics.fat !== null && latestMetrics.fat !== undefined 
+                      ? `${latestMetrics.fat.toFixed(1)}g` 
+                      : '-'}
+                  </p>
+                </div>
+                <Sandwich className="w-8 h-8 text-yellow-500" />
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">炭水化物</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {latestMetrics.carbohydrate !== null && latestMetrics.carbohydrate !== undefined 
+                      ? `${latestMetrics.carbohydrate.toFixed(1)}g` 
+                      : '-'}
+                  </p>
+                </div>
+                <Wheat className="w-8 h-8 text-amber-600" />
+              </div>
+            </div>
           </div>
         )}
 
@@ -219,6 +274,22 @@ export default function Dashboard() {
                 <Legend />
                 <Area type="monotone" dataKey="calories" stroke="#F97316" fill="#F97316" fillOpacity={0.6} name="消費カロリー (kcal)" connectNulls={false} />
               </AreaChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">PFC栄養素</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Line type="monotone" dataKey="protein" stroke="#EF4444" name="タンパク質 (g)" connectNulls={false} />
+                <Line type="monotone" dataKey="fat" stroke="#F59E0B" name="脂質 (g)" connectNulls={false} />
+                <Line type="monotone" dataKey="carbohydrate" stroke="#D97706" name="炭水化物 (g)" connectNulls={false} />
+              </LineChart>
             </ResponsiveContainer>
           </div>
         </div>

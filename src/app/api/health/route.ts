@@ -34,6 +34,14 @@ export const GET = withCors(async () => {
         activeCalories: row.activeCalories,
         restingCalories: row.restingCalories,
         totalCalories: row.totalCalories,
+        // PFC栄養素
+        proteinG: row.proteinG ? Number(row.proteinG) : null,
+        fatG: row.fatG ? Number(row.fatG) : null,
+        carbohydrateG: row.carbohydrateG ? Number(row.carbohydrateG) : null,
+        // その他の栄養素
+        fiberG: row.fiberG ? Number(row.fiberG) : null,
+        sugarG: row.sugarG ? Number(row.sugarG) : null,
+        sodiumMg: row.sodiumMg ? Number(row.sodiumMg) : null,
         createdAt: row.createdAt.toISOString(),
         updatedAt: row.updatedAt.toISOString(),
       }))
@@ -79,6 +87,14 @@ export const POST = withCors(withAuth(async (request: NextRequest) => {
       activeCalories: result.activeCalories,
       restingCalories: result.restingCalories,
       totalCalories: result.totalCalories,
+      // PFC栄養素
+      proteinG: result.proteinG ? Number(result.proteinG) : null,
+      fatG: result.fatG ? Number(result.fatG) : null,
+      carbohydrateG: result.carbohydrateG ? Number(result.carbohydrateG) : null,
+      // その他の栄養素
+      fiberG: result.fiberG ? Number(result.fiberG) : null,
+      sugarG: result.sugarG ? Number(result.sugarG) : null,
+      sodiumMg: result.sodiumMg ? Number(result.sodiumMg) : null,
       createdAt: result.createdAt.toISOString(),
       updatedAt: result.updatedAt.toISOString(),
     }
