@@ -9,6 +9,7 @@ import { HealthData, DailyHealthMetrics, Goal, GoalProgress } from '@/types/heal
 import { CustomTooltip } from './CustomTooltip';
 import { calculateIntakeCalories, calculatePFCRatio } from '@/lib/utils/calorieCalculator';
 import { calculateGoalProgress } from '@/lib/utils/goalCalculator';
+import { getYesterdayInJST } from '@/lib/utils/dateUtils';
 import GoalProgressBar from './GoalProgressBar';
 import GoalComparisonChart from './GoalComparisonChart';
 import Footer from './Footer';
@@ -146,10 +147,8 @@ export default function Dashboard() {
   const getLatestMetrics = () => {
     if (healthData.length === 0) return null;
     
-    // 昨日の日付を取得
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    // 昨日の日付を取得（日本時間）
+    const yesterdayStr = getYesterdayInJST();
     
     // 昨日のデータを優先的に探す
     let targetData = healthData.find(data => data.date === yesterdayStr);
