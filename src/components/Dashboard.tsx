@@ -1,17 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { format, subDays, parseISO } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import { TrendingDown, TrendingUp, Activity, Flame, Weight, Percent, Beef, Wheat, Sandwich, Calculator, Info, Target } from 'lucide-react';
+import { TrendingDown, TrendingUp, Activity, Flame, Weight, Percent, Beef, Wheat, Sandwich, Calculator, Info, Target, Calendar } from 'lucide-react';
 import { HealthData, DailyHealthMetrics, Goal, GoalProgress } from '@/types/health';
 import { CustomTooltip } from './CustomTooltip';
 import { calculateIntakeCalories, calculatePFCRatio } from '@/lib/utils/calorieCalculator';
 import { calculateGoalProgress } from '@/lib/utils/goalCalculator';
 import { getYesterdayInJST } from '@/lib/utils/dateUtils';
+import { calculateLinearWeightGoal } from '@/lib/utils/weightGoalCalculator';
 import { MetricsCard } from './MetricsCard';
-import GoalProgressBar from './GoalProgressBar';
 import GoalComparisonChart from './GoalComparisonChart';
 import Footer from './Footer';
 
@@ -111,7 +111,7 @@ export default function Dashboard() {
       .filter(item => item.date && new Date(item.date) >= cutoffDate)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-    return filteredData.map(item => ({
+    const chartData = filteredData.map(item => ({
       date: item.date ? format(new Date(item.date), 'MM/dd', { locale: ja }) : '-',
       weight: item.weight,
       bodyFat: item.bodyFatPercentage,
@@ -129,6 +129,24 @@ export default function Dashboard() {
       sugar: item.sugarG,
       sodium: item.sodiumMg,
     }));
+
+    // 目標線データを追加
+    if (goals.length > 0) {
+      const goal = goals[0];
+      const goalData = calculateLinearWeightGoal(goal, healthData, dateRange);
+      
+      // chartDataと目標データをマージ
+      return chartData.map(item => {
+        const goalItem = goalData.find(g => g.date === item.date);
+        return {
+          ...item,
+          targetWeight: goalItem?.targetWeight,
+          linearTarget: goalItem?.linearTarget
+        };
+      });
+    }
+
+    return chartData;
   };
 
   const getLatestMetrics = () => {
@@ -192,12 +210,6 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold text-gray-900">ダイエットダッシュボード</h1>
         </div>
         
-        {/* 目標進捗セクション（最優先表示） */}
-        {goalProgress && (
-          <div className="mb-8">
-            <GoalProgressBar progress={goalProgress} />
-          </div>
-        )}
         
         {/* タブナビゲーション */}
         <div className="mb-6">
@@ -242,10 +254,21 @@ export default function Dashboard() {
         {/* 昨日の状況タブ */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
-            {/* 日付表示 */}
+            {/* 日付表示と残り日数 */}
             {latestMetrics && latestMetrics.date && (
-              <div className="text-center text-lg font-medium text-gray-700 mb-4">
-                {format(new Date(latestMetrics.date), 'yyyy年MM月dd日', { locale: ja })}の記録
+              <div className="text-center mb-4">
+                <div className="text-lg font-medium text-gray-700">
+                  {format(new Date(latestMetrics.date), 'yyyy年MM月dd日', { locale: ja })}の記録
+                </div>
+                {goalProgress && (
+                  <div className="text-sm text-gray-500 mt-1 flex items-center justify-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    <span>目標まで残り {goalProgress.daysRemaining} 日</span>
+                    <span className="text-xs">
+                      ({goalProgress.goal.target_weight_kg && `目標: ${goalProgress.goal.target_weight_kg}kg`})
+                    </span>
+                  </div>
+                )}
               </div>
             )}
             
@@ -393,7 +416,13 @@ export default function Dashboard() {
                     <YAxis />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
-                    <Line type="monotone" dataKey="weight" stroke="#3B82F6" name="体重 (kg)" connectNulls={false} />
+                    <Line type="monotone" dataKey="weight" stroke="#3B82F6" name="実際の体重 (kg)" connectNulls={false} strokeWidth={2} />
+                    {goalProgress && (
+                      <>
+                        <Line type="monotone" dataKey="linearTarget" stroke="#10B981" name="目標線形減少" strokeDasharray="5 5" connectNulls={false} />
+                        <Line type="monotone" dataKey="targetWeight" stroke="#EF4444" name="目標体重" strokeDasharray="3 3" connectNulls={false} />
+                      </>
+                    )}
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -461,7 +490,13 @@ export default function Dashboard() {
                     <YAxis />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
-                    <Line type="monotone" dataKey="weight" stroke="#3B82F6" name="体重 (kg)" connectNulls={false} />
+                    <Line type="monotone" dataKey="weight" stroke="#3B82F6" name="実際の体重 (kg)" connectNulls={false} strokeWidth={2} />
+                    {goalProgress && (
+                      <>
+                        <Line type="monotone" dataKey="linearTarget" stroke="#10B981" name="目標線形減少" strokeDasharray="5 5" connectNulls={false} />
+                        <Line type="monotone" dataKey="targetWeight" stroke="#EF4444" name="目標体重" strokeDasharray="3 3" connectNulls={false} />
+                      </>
+                    )}
                   </LineChart>
                 </ResponsiveContainer>
               </div>
