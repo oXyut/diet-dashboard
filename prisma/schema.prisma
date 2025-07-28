@@ -1,0 +1,28 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model HealthData {
+  id                String   @id @default(uuid())
+  date              DateTime @unique @db.Date
+  weight            Decimal? @db.Decimal(5, 2)
+  bodyFatPercentage Decimal? @map("body_fat_percentage") @db.Decimal(4, 2)
+  muscleMass        Decimal? @map("muscle_mass") @db.Decimal(5, 2)
+  steps             Int?
+  activeCalories    Int?     @map("active_calories")
+  restingCalories   Int?     @map("resting_calories")
+  totalCalories     Int?     @map("total_calories")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  
+  @@map("health_data")
+}
