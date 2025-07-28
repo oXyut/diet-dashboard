@@ -26,15 +26,15 @@ export default function GoalComparisonChart({ goal, healthData, dateRange }: Goa
         actualFat: item.fatG,
         actualCarb: item.carbohydrateG,
         actualSteps: item.steps,
-        targetCaloriesMin: goal.dailyCalorieIntakeMin,
-        targetCaloriesMax: goal.dailyCalorieIntakeMax,
-        targetProteinMin: goal.dailyProteinMinG,
-        targetProteinMax: goal.dailyProteinMaxG,
-        targetFatMin: goal.dailyFatMinG,
-        targetFatMax: goal.dailyFatMaxG,
-        targetCarbMin: goal.dailyCarbMinG,
-        targetCarbMax: goal.dailyCarbMaxG,
-        targetSteps: goal.dailyStepsTarget,
+        targetCaloriesMin: goal.daily_calorie_intake_min,
+        targetCaloriesMax: goal.daily_calorie_intake_max,
+        targetProteinMin: goal.daily_protein_min_g,
+        targetProteinMax: goal.daily_protein_max_g,
+        targetFatMin: goal.daily_fat_min_g,
+        targetFatMax: goal.daily_fat_max_g,
+        targetCarbMin: goal.daily_carb_min_g,
+        targetCarbMax: goal.daily_carb_max_g,
+        targetSteps: goal.daily_steps_target,
       }));
   };
 
@@ -71,13 +71,13 @@ export default function GoalComparisonChart({ goal, healthData, dateRange }: Goa
             <Tooltip content={<CustomTooltip />} />
             <Legend />
             <ReferenceLine 
-              y={goal.dailyCalorieIntakeMin || 0} 
+              y={goal.daily_calorie_intake_min || 0} 
               stroke="#10B981" 
               strokeDasharray="5 5" 
               label="最小目標"
             />
             <ReferenceLine 
-              y={goal.dailyCalorieIntakeMax || 0} 
+              y={goal.daily_calorie_intake_max || 0} 
               stroke="#EF4444" 
               strokeDasharray="5 5" 
               label="最大目標"
@@ -108,19 +108,19 @@ export default function GoalComparisonChart({ goal, healthData, dateRange }: Goa
           <div className="text-center p-2 bg-red-50 rounded">
             <p className="font-medium text-red-700">タンパク質目標</p>
             <p className="text-red-600">
-              {goal.dailyProteinMinG?.toFixed(1)} - {goal.dailyProteinMaxG?.toFixed(1)}g
+              {goal.daily_protein_min_g?.toFixed(1)} - {goal.daily_protein_max_g?.toFixed(1)}g
             </p>
           </div>
           <div className="text-center p-2 bg-yellow-50 rounded">
             <p className="font-medium text-yellow-700">脂質目標</p>
             <p className="text-yellow-600">
-              {goal.dailyFatMinG?.toFixed(1)} - {goal.dailyFatMaxG?.toFixed(1)}g
+              {goal.daily_fat_min_g?.toFixed(1)} - {goal.daily_fat_max_g?.toFixed(1)}g
             </p>
           </div>
           <div className="text-center p-2 bg-orange-50 rounded">
             <p className="font-medium text-orange-700">炭水化物目標</p>
             <p className="text-orange-600">
-              {goal.dailyCarbMinG?.toFixed(1)} - {goal.dailyCarbMaxG?.toFixed(1)}g
+              {goal.daily_carb_min_g?.toFixed(1)} - {goal.daily_carb_max_g?.toFixed(1)}g
             </p>
           </div>
         </div>
@@ -137,7 +137,7 @@ export default function GoalComparisonChart({ goal, healthData, dateRange }: Goa
             <Tooltip content={<CustomTooltip />} />
             <Legend />
             <ReferenceLine 
-              y={goal.dailyStepsTarget || 0} 
+              y={goal.daily_steps_target || 0} 
               stroke="#10B981" 
               strokeDasharray="5 5" 
               label="目標歩数"

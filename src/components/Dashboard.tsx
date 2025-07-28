@@ -46,28 +46,45 @@ export default function Dashboard() {
 
   const fetchGoals = async () => {
     try {
+      console.log('🎯 Fetching goals from API...');
       const response = await fetch('/api/goals?active=true');
+      console.log('📡 Goals API response status:', response.status);
       const data = await response.json();
+      console.log('📊 Goals API data:', data);
       const goalsData = data.data || [];
+      console.log('🎯 Processed goals data:', goalsData);
       setGoals(goalsData);
       
       // アクティブな目標の進捗を計算
       if (goalsData.length > 0 && healthData.length > 0) {
         const activeGoal = goalsData[0]; // 最初のアクティブな目標を使用
         const latestHealthData = healthData[0];
+        console.log('🏆 Active goal:', activeGoal);
+        console.log('💪 Latest health data:', latestHealthData);
         
         // 目標データの妥当性確認
-        if (activeGoal && activeGoal.startDate && activeGoal.endDate) {
+        if (activeGoal && activeGoal.start_date && activeGoal.end_date) {
           try {
             const progress = calculateGoalProgress(activeGoal, latestHealthData);
+            console.log('📈 Calculated progress:', progress);
             setGoalProgress(progress);
           } catch (error) {
-            console.error('Failed to calculate goal progress:', error);
+            console.error('❌ Failed to calculate goal progress:', error);
           }
+        } else {
+          console.log('⚠️ Goal missing start_date or end_date:', { start_date: activeGoal?.start_date, end_date: activeGoal?.end_date });
         }
+      } else {
+        console.log('⚠️ No goals or health data:', { goalsCount: goalsData.length, healthDataCount: healthData.length });
       }
     } catch (error) {
-      console.error('Failed to fetch goals:', error);
+      console.error('❌ Failed to fetch goals:', error);
+      if (error instanceof Error) {
+        console.error('❌ Error details:', {
+          message: error.message,
+          stack: error.stack
+        });
+      }
     }
   };
 
@@ -78,7 +95,7 @@ export default function Dashboard() {
       const latestHealthData = healthData[0];
       
       // 目標データの妥当性確認
-      if (activeGoal && activeGoal.startDate && activeGoal.endDate) {
+      if (activeGoal && activeGoal.start_date && activeGoal.end_date) {
         try {
           const progress = calculateGoalProgress(activeGoal, latestHealthData);
           setGoalProgress(progress);

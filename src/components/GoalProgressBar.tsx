@@ -29,28 +29,28 @@ export default function GoalProgressBar({ progress }: GoalProgressBarProps) {
       </div>
 
       {/* 目標体重と現在の体重 */}
-      {goal.targetWeightKg && (
+      {goal.target_weight_kg && (
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="text-center p-4 bg-blue-50 rounded-lg">
             <p className="text-sm font-medium text-blue-600 mb-1">目標体重</p>
-            <p className="text-2xl font-bold text-blue-900">{goal.targetWeightKg} kg</p>
+            <p className="text-2xl font-bold text-blue-900">{goal.target_weight_kg} kg</p>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-lg">
             <p className="text-sm font-medium text-gray-600 mb-1">現在の体重</p>
             <p className="text-2xl font-bold text-gray-900">
               {currentWeight ? `${currentWeight} kg` : '-'}
             </p>
-            {currentWeight && goal.targetWeightKg && (
+            {currentWeight && goal.target_weight_kg && (
               <div className="flex items-center justify-center mt-2">
-                {currentWeight > goal.targetWeightKg ? (
+                {currentWeight > goal.target_weight_kg ? (
                   <TrendingUp className="w-4 h-4 text-red-500 mr-1" />
                 ) : (
                   <TrendingDown className="w-4 h-4 text-green-500 mr-1" />
                 )}
                 <span className={`text-sm ${
-                  currentWeight > goal.targetWeightKg ? 'text-red-500' : 'text-green-500'
+                  currentWeight > goal.target_weight_kg ? 'text-red-500' : 'text-green-500'
                 }`}>
-                  {Math.abs(currentWeight - goal.targetWeightKg).toFixed(1)} kg
+                  {Math.abs(currentWeight - goal.target_weight_kg).toFixed(1)} kg
                 </span>
               </div>
             )}
@@ -86,9 +86,9 @@ export default function GoalProgressBar({ progress }: GoalProgressBarProps) {
           <div className={`p-3 rounded-lg border ${getAchievementColor(dailyAchievements.calories)}`}>
             <p className="text-xs font-medium mb-1">摂取カロリー</p>
             <p className="text-sm font-semibold">{getAchievementText(dailyAchievements.calories)}</p>
-            {goal.dailyCalorieIntakeMin && goal.dailyCalorieIntakeMax && (
+            {goal.daily_calorie_intake_min && goal.daily_calorie_intake_max && (
               <p className="text-xs mt-1">
-                目標: {goal.dailyCalorieIntakeMin}-{goal.dailyCalorieIntakeMax}kcal
+                目標: {goal.daily_calorie_intake_min}-{goal.daily_calorie_intake_max}kcal
               </p>
             )}
           </div>
@@ -96,9 +96,9 @@ export default function GoalProgressBar({ progress }: GoalProgressBarProps) {
           <div className={`p-3 rounded-lg border ${getAchievementColor(dailyAchievements.protein)}`}>
             <p className="text-xs font-medium mb-1">タンパク質</p>
             <p className="text-sm font-semibold">{getAchievementText(dailyAchievements.protein)}</p>
-            {goal.dailyProteinMinG && goal.dailyProteinMaxG && (
+            {goal.daily_protein_min_g && goal.daily_protein_max_g && (
               <p className="text-xs mt-1">
-                目標: {goal.dailyProteinMinG}-{goal.dailyProteinMaxG}g
+                目標: {goal.daily_protein_min_g}-{goal.daily_protein_max_g}g
               </p>
             )}
           </div>
@@ -106,9 +106,9 @@ export default function GoalProgressBar({ progress }: GoalProgressBarProps) {
           <div className={`p-3 rounded-lg border ${getAchievementColor(dailyAchievements.fat)}`}>
             <p className="text-xs font-medium mb-1">脂質</p>
             <p className="text-sm font-semibold">{getAchievementText(dailyAchievements.fat)}</p>
-            {goal.dailyFatMinG && goal.dailyFatMaxG && (
+            {goal.daily_fat_min_g && goal.daily_fat_max_g && (
               <p className="text-xs mt-1">
-                目標: {goal.dailyFatMinG}-{goal.dailyFatMaxG}g
+                目標: {goal.daily_fat_min_g}-{goal.daily_fat_max_g}g
               </p>
             )}
           </div>
@@ -116,9 +116,9 @@ export default function GoalProgressBar({ progress }: GoalProgressBarProps) {
           <div className={`p-3 rounded-lg border ${getAchievementColor(dailyAchievements.carbohydrate)}`}>
             <p className="text-xs font-medium mb-1">炭水化物</p>
             <p className="text-sm font-semibold">{getAchievementText(dailyAchievements.carbohydrate)}</p>
-            {goal.dailyCarbMinG && goal.dailyCarbMaxG && (
+            {goal.daily_carb_min_g && goal.daily_carb_max_g && (
               <p className="text-xs mt-1">
-                目標: {goal.dailyCarbMinG}-{goal.dailyCarbMaxG}g
+                目標: {goal.daily_carb_min_g}-{goal.daily_carb_max_g}g
               </p>
             )}
           </div>
@@ -126,9 +126,9 @@ export default function GoalProgressBar({ progress }: GoalProgressBarProps) {
           <div className={`p-3 rounded-lg border ${getAchievementColor(dailyAchievements.steps)}`}>
             <p className="text-xs font-medium mb-1">歩数</p>
             <p className="text-sm font-semibold">{getAchievementText(dailyAchievements.steps)}</p>
-            {goal.dailyStepsTarget && (
+            {goal.daily_steps_target && (
               <p className="text-xs mt-1">
-                目標: {goal.dailyStepsTarget.toLocaleString()}歩
+                目標: {goal.daily_steps_target.toLocaleString()}歩
               </p>
             )}
           </div>

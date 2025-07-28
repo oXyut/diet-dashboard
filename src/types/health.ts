@@ -42,21 +42,21 @@ export interface Goal {
   id: number;
   name: string;
   description?: string | null;
-  targetWeightKg?: number | null;
-  startDate: string;
-  endDate: string;
-  dailyCalorieIntakeMin?: number | null;
-  dailyCalorieIntakeMax?: number | null;
-  dailyProteinMinG?: number | null;
-  dailyProteinMaxG?: number | null;
-  dailyFatMinG?: number | null;
-  dailyFatMaxG?: number | null;
-  dailyCarbMinG?: number | null;
-  dailyCarbMaxG?: number | null;
-  dailyStepsTarget?: number | null;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  target_weight_kg?: number | null;
+  start_date: string;
+  end_date: string;
+  daily_calorie_intake_min?: number | null;
+  daily_calorie_intake_max?: number | null;
+  daily_protein_min_g?: number | null;
+  daily_protein_max_g?: number | null;
+  daily_fat_min_g?: number | null;
+  daily_fat_max_g?: number | null;
+  daily_carb_min_g?: number | null;
+  daily_carb_max_g?: number | null;
+  daily_steps_target?: number | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface GoalProgress {

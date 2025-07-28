@@ -12,12 +12,12 @@ export function calculateGoalProgress(
   const today = new Date();
   
   // 日付文字列の安全な処理
-  if (!goal.startDate || !goal.endDate) {
+  if (!goal.start_date || !goal.end_date) {
     throw new Error('Goal start date and end date are required');
   }
   
-  const startDate = parseISO(goal.startDate);
-  const endDate = parseISO(goal.endDate);
+  const startDate = parseISO(goal.start_date);
+  const endDate = parseISO(goal.end_date);
   
   const totalDays = differenceInDays(endDate, startDate) + 1;
   const daysElapsed = Math.max(0, differenceInDays(today, startDate) + 1);
@@ -28,13 +28,13 @@ export function calculateGoalProgress(
   
   // 体重の進捗を評価
   let isOnTrack = true;
-  if (goal.targetWeightKg && latestHealthData?.weight) {
+  if (goal.target_weight_kg && latestHealthData?.weight) {
     // 簡単な線形進捗を仮定（実際にはより複雑な計算が必要）
     const expectedProgress = progressPercentage / 100;
     // 体重減少の場合を想定
     const currentWeight = latestHealthData.weight;
-    if (currentWeight > goal.targetWeightKg) {
-      isOnTrack = expectedProgress > 0.5 ? currentWeight <= goal.targetWeightKg + (currentWeight - goal.targetWeightKg) * (1 - expectedProgress) : true;
+    if (currentWeight > goal.target_weight_kg) {
+      isOnTrack = expectedProgress > 0.5 ? currentWeight <= goal.target_weight_kg + (currentWeight - goal.target_weight_kg) * (1 - expectedProgress) : true;
     }
   }
   
@@ -78,25 +78,25 @@ function evaluateDailyAchievements(
   return {
     calories: evaluateRange(
       intakeCalories,
-      goal.dailyCalorieIntakeMin,
-      goal.dailyCalorieIntakeMax
+      goal.daily_calorie_intake_min,
+      goal.daily_calorie_intake_max
     ),
     protein: evaluateRange(
       healthData.proteinG,
-      goal.dailyProteinMinG,
-      goal.dailyProteinMaxG
+      goal.daily_protein_min_g,
+      goal.daily_protein_max_g
     ),
     fat: evaluateRange(
       healthData.fatG,
-      goal.dailyFatMinG,
-      goal.dailyFatMaxG
+      goal.daily_fat_min_g,
+      goal.daily_fat_max_g
     ),
     carbohydrate: evaluateRange(
       healthData.carbohydrateG,
-      goal.dailyCarbMinG,
-      goal.dailyCarbMaxG
+      goal.daily_carb_min_g,
+      goal.daily_carb_max_g
     ),
-    steps: evaluateSteps(healthData.steps, goal.dailyStepsTarget),
+    steps: evaluateSteps(healthData.steps, goal.daily_steps_target),
   };
 }
 
