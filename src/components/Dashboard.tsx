@@ -110,7 +110,18 @@ export default function Dashboard() {
             <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-blue-800">
               <p className="font-semibold mb-1">食事の詳細情報について</p>
-              <p>詳しい食事内容や栄養バランスは「あすけん」アプリでご確認いただけます。</p>
+              <p>
+                詳しい食事内容や栄養バランスは
+                <a 
+                  href="https://www.asken.jp" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="underline font-medium hover:text-blue-900"
+                >
+                  「あすけん」アプリ
+                </a>
+                でご確認いただけます。
+              </p>
               {process.env.NEXT_PUBLIC_ASKEN_MEMBER_ID && (
                 <p className="mt-1 text-xs">会員ID: {process.env.NEXT_PUBLIC_ASKEN_MEMBER_ID}</p>
               )}
