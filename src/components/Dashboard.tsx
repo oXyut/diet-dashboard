@@ -8,6 +8,7 @@ import { TrendingDown, TrendingUp, Activity, Flame, Weight, Percent, Beef, Wheat
 import { HealthData, DailyHealthMetrics } from '@/types/health';
 import { CustomTooltip } from './CustomTooltip';
 import { calculateIntakeCalories, calculatePFCRatio } from '@/lib/utils/calorieCalculator';
+import Footer from './Footer';
 
 export default function Dashboard() {
   const [healthData, setHealthData] = useState<HealthData[]>([]);
@@ -359,6 +360,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
