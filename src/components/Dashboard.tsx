@@ -26,12 +26,6 @@ export default function Dashboard() {
   useEffect(() => {
     fetchHealthData();
     fetchGoals();
-    // 5秒ごとに自動更新（デバッグ用）
-    const interval = setInterval(() => {
-      fetchHealthData();
-      fetchGoals();
-    }, 5000);
-    return () => clearInterval(interval);
   }, []);
 
   const fetchHealthData = async () => {
@@ -57,39 +51,8 @@ export default function Dashboard() {
       console.log('🎯 Processed goals data:', goalsData);
       setGoals(goalsData);
       
-      // アクティブな目標の進捗を計算
-      if (goalsData.length > 0 && healthData.length > 0) {
-        const activeGoal = goalsData[0]; // 最初のアクティブな目標を使用
-        
-        // 昨日の日付を取得（日本時間）
-        const yesterdayStr = getYesterdayInJST();
-        
-        // 昨日のデータを優先的に使用
-        let targetHealthData = healthData.find(data => data.date === yesterdayStr);
-        if (!targetHealthData) {
-          targetHealthData = healthData[0];
-        }
-        
-        console.log('🏆 Active goal:', activeGoal);
-        console.log('📅 Yesterday date (JST):', yesterdayStr);
-        console.log('💪 Target health data:', targetHealthData);
-        console.log('📊 All health data dates:', healthData.map(d => ({ date: d.date, id: d.id })));
-        
-        // 目標データの妥当性確認
-        if (activeGoal && activeGoal.start_date && activeGoal.end_date) {
-          try {
-            const progress = calculateGoalProgress(activeGoal, targetHealthData);
-            console.log('📈 Calculated progress:', progress);
-            setGoalProgress(progress);
-          } catch (error) {
-            console.error('❌ Failed to calculate goal progress:', error);
-          }
-        } else {
-          console.log('⚠️ Goal missing start_date or end_date:', { start_date: activeGoal?.start_date, end_date: activeGoal?.end_date });
-        }
-      } else {
-        console.log('⚠️ No goals or health data:', { goalsCount: goalsData.length, healthDataCount: healthData.length });
-      }
+      // 目標進捗の計算はuseEffectで行うため、ここではスキップ
+      // fetchGoalsが呼ばれる時点ではhealthDataが古い可能性があるため
     } catch (error) {
       console.error('❌ Failed to fetch goals:', error);
       if (error instanceof Error) {
