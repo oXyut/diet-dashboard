@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ZodError } from 'zod'
 import { PrismaHealthDataRepository } from '@/lib/repositories/implementations/PrismaHealthDataRepository'
+import { SupabaseHealthDataRepository } from '@/lib/repositories/implementations/SupabaseHealthDataRepository'
 import { HealthDataService } from '@/lib/services/HealthDataService'
 import { withCors, handleOptions } from '@/lib/middleware/cors'
 import { withAuth } from '@/lib/middleware/auth'
@@ -8,7 +9,9 @@ import { parseRequestBody } from '@/lib/utils/requestParser'
 import { normalizeRequestBody } from '@/lib/utils/dateNormalizer'
 
 // インスタンス作成（依存性注入）
-const repository = new PrismaHealthDataRepository()
+const repository = process.env.USE_PRISMA === 'true' 
+  ? new PrismaHealthDataRepository()
+  : new SupabaseHealthDataRepository()
 const service = new HealthDataService(repository)
 
 export async function OPTIONS() {
@@ -49,6 +52,7 @@ export const GET = withCors(async () => {
 export const POST = withCors(withAuth(async (request: NextRequest) => {
   try {
     console.log('=== API Health POST Request (Clean Architecture) ===')
+    console.log('Repository type:', process.env.USE_PRISMA === 'true' ? 'Prisma' : 'Supabase')
     
     // リクエストボディのパース
     const rawBody = await parseRequestBody(request)
