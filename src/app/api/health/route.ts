@@ -1,181 +1,116 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { supabase, getSupabaseAdmin } from '@/lib/supabase';
+import { NextRequest, NextResponse } from 'next/server'
+import { ZodError } from 'zod'
+import { PrismaHealthDataRepository } from '@/lib/repositories/implementations/PrismaHealthDataRepository'
+import { HealthDataService } from '@/lib/services/HealthDataService'
+import { withCors, handleOptions } from '@/lib/middleware/cors'
+import { withAuth } from '@/lib/middleware/auth'
+import { parseRequestBody } from '@/lib/utils/requestParser'
+import { normalizeRequestBody } from '@/lib/utils/dateNormalizer'
 
-// CORS対応
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, X-API-Key',
-};
+// インスタンス作成（依存性注入）
+const repository = new PrismaHealthDataRepository()
+const service = new HealthDataService(repository)
 
 export async function OPTIONS() {
-  return NextResponse.json({}, { headers: corsHeaders });
+  return handleOptions()
 }
 
-export async function GET() {
+export const GET = withCors(async () => {
   try {
-    const { data, error } = await supabase
-      .from('health_data')
-      .select('*')
-      .order('date', { ascending: false });
-
-    if (error) {
-      console.error('Supabase error:', error);
-      return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500, headers: corsHeaders });
-    }
-
-    // 既存のフォーマットに変換
+    const data = await service.getHealthData({ take: 100 })
+    
+    // 既存のフロントエンドとの互換性のためのフォーマット変換
     const formattedData = {
       data: data.map(row => ({
         id: row.id,
-        date: row.date,
-        weight: row.weight,
-        bodyFatPercentage: row.body_fat_percentage,
-        muscleMass: row.muscle_mass,
+        date: row.date.toISOString().split('T')[0],
+        weight: row.weight ? Number(row.weight) : null,
+        bodyFatPercentage: row.bodyFatPercentage ? Number(row.bodyFatPercentage) : null,
+        muscleMass: row.muscleMass ? Number(row.muscleMass) : null,
         steps: row.steps,
-        activeCalories: row.active_calories,
-        restingCalories: row.resting_calories,
-        totalCalories: row.total_calories,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
+        activeCalories: row.activeCalories,
+        restingCalories: row.restingCalories,
+        totalCalories: row.totalCalories,
+        createdAt: row.createdAt.toISOString(),
+        updatedAt: row.updatedAt.toISOString(),
       }))
-    };
-
-    return NextResponse.json(formattedData, { headers: corsHeaders });
+    }
+    
+    return NextResponse.json(formattedData)
   } catch (error) {
-    console.error('Error:', error);
-    return NextResponse.json({ error: 'Failed to read data' }, { status: 500, headers: corsHeaders });
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    // API Key認証
-    const apiKey = request.headers.get('x-api-key');
-    if (process.env.API_SECRET_KEY && apiKey !== process.env.API_SECRET_KEY) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
-    }
-
-    // Content-Typeチェック
-    const contentType = request.headers.get('content-type');
-    console.log('=== API Health POST Request ===');
-    console.log('Content-Type:', contentType);
-    
-    let body;
-    
-    // Content-Typeに応じて処理を分岐
-    if (contentType?.includes('application/json')) {
-      body = await request.json();
-    } else {
-      // プレーンテキストとして受け取ってJSONパース
-      const text = await request.text();
-      console.log('Raw text body:', text);
-      try {
-        body = JSON.parse(text);
-      } catch (e) {
-        console.error('JSON parse error:', e);
-        return NextResponse.json(
-          { error: 'Invalid JSON', received: text }, 
-          { status: 400, headers: corsHeaders }
-        );
-      }
-    }
-    
-    console.log('Parsed body:', JSON.stringify(body, null, 2));
-    
-    // キー名の正規化（スペースのトリム）
-    const normalizedBody: any = {};
-    for (const [key, value] of Object.entries(body)) {
-      normalizedBody[key.trim()] = value;
-    }
-    
-    const { date, weight, bodyFatPercentage, muscleMass, steps, activeCalories, restingCalories } = normalizedBody;
-    
-    // 日付の正規化
-    let normalizedDate;
-    if (date) {
-      // いくつかの日付形式に対応
-      if (date.includes('/')) {
-        // "2025/07/26 13:23" -> "2025-07-26"
-        const datePart = date.split(' ')[0].replace(/\//g, '-');
-        normalizedDate = datePart;
-      } else if (date.includes('-')) {
-        // "2025-07-26" or "2025-07-26T..." -> "2025-07-26"
-        normalizedDate = date.split('T')[0];
-      } else {
-        normalizedDate = date;
-      }
-    } else {
-      normalizedDate = new Date().toISOString().split('T')[0];
-    }
-    
-    // データ型の変換とバリデーション
-    const processedData = {
-      date: normalizedDate,
-      weight: weight !== undefined ? Number(weight) : null,
-      body_fat_percentage: bodyFatPercentage !== undefined ? Number(bodyFatPercentage) : null,
-      muscle_mass: muscleMass !== undefined ? Number(muscleMass) : null,
-      steps: steps !== undefined ? Number(steps) : null,
-      active_calories: activeCalories !== undefined ? Number(activeCalories) : null,
-      resting_calories: restingCalories !== undefined ? Number(restingCalories) : null,
-    };
-    
-    // totalCaloriesの計算
-    let totalCalories = null;
-    if (processedData.active_calories !== null && processedData.resting_calories !== null) {
-      totalCalories = processedData.active_calories + processedData.resting_calories;
-    } else if (processedData.active_calories !== null) {
-      totalCalories = processedData.active_calories;
-    } else if (processedData.resting_calories !== null) {
-      totalCalories = processedData.resting_calories;
-    }
-    
-    const supabaseAdmin = getSupabaseAdmin();
-    
-    // Upsert (存在する場合は更新、なければ挿入)
-    const { data, error } = await supabaseAdmin
-      .from('health_data')
-      .upsert({
-        ...processedData,
-        total_calories: totalCalories,
-      }, {
-        onConflict: 'date'
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Supabase error:', error);
-      return NextResponse.json({ error: 'Failed to save data' }, { status: 500, headers: corsHeaders });
-    }
-
-    console.log('Data saved successfully');
-    console.log('==============================\n');
-    
-    // レスポンスを既存のフォーマットに合わせる
-    const response = {
-      id: data.id,
-      date: data.date,
-      weight: data.weight,
-      bodyFatPercentage: data.body_fat_percentage,
-      muscleMass: data.muscle_mass,
-      steps: data.steps,
-      activeCalories: data.active_calories,
-      restingCalories: data.resting_calories,
-      totalCalories: data.total_calories,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-    };
-    
-    return NextResponse.json(response, { headers: corsHeaders });
-  } catch (error: any) {
-    console.error('=== API Health POST Error ===');
-    console.error('Error:', error);
-    console.error('Stack:', error.stack);
-    console.error('==============================\n');
+    console.error('GET /api/health error:', error)
     return NextResponse.json(
-      { error: 'Failed to save data', details: error.message }, 
-      { status: 500, headers: corsHeaders }
-    );
+      { error: 'Failed to fetch data' },
+      { status: 500 }
+    )
   }
-}
+})
+
+export const POST = withCors(withAuth(async (request: NextRequest) => {
+  try {
+    console.log('=== API Health POST Request (Clean Architecture) ===')
+    
+    // リクエストボディのパース
+    const rawBody = await parseRequestBody(request)
+    console.log('Raw body:', JSON.stringify(rawBody, null, 2))
+    
+    // ボディの正規化
+    const normalizedBody = normalizeRequestBody(rawBody)
+    console.log('Normalized body:', JSON.stringify(normalizedBody, null, 2))
+    
+    // サービス層でバリデーションとビジネスロジックを処理
+    const result = await service.recordHealthData(normalizedBody)
+    
+    console.log('Data saved successfully')
+    console.log('==============================\n')
+    
+    // レスポンスフォーマット（既存との互換性維持）
+    const response = {
+      id: result.id,
+      date: result.date.toISOString().split('T')[0],
+      weight: result.weight ? Number(result.weight) : null,
+      bodyFatPercentage: result.bodyFatPercentage ? Number(result.bodyFatPercentage) : null,
+      muscleMass: result.muscleMass ? Number(result.muscleMass) : null,
+      steps: result.steps,
+      activeCalories: result.activeCalories,
+      restingCalories: result.restingCalories,
+      totalCalories: result.totalCalories,
+      createdAt: result.createdAt.toISOString(),
+      updatedAt: result.updatedAt.toISOString(),
+    }
+    
+    return NextResponse.json(response)
+  } catch (error) {
+    console.error('=== API Health POST Error (Clean Architecture) ===')
+    console.error('Error:', error)
+    console.error('==============================\n')
+    
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          details: error.issues
+        },
+        { status: 400 }
+      )
+    }
+    
+    if (error instanceof Error && error.message.includes('Invalid JSON')) {
+      return NextResponse.json(
+        {
+          error: 'Invalid JSON format',
+          details: error.message
+        },
+        { status: 400 }
+      )
+    }
+    
+    return NextResponse.json(
+      {
+        error: 'Failed to save data',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    )
+  }
+}))
