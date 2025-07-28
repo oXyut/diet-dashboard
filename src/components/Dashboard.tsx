@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { format, subDays, parseISO } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import { TrendingDown, TrendingUp, Activity, Flame, Weight, Percent, Beef, Wheat, Sandwich } from 'lucide-react';
+import { TrendingDown, TrendingUp, Activity, Flame, Weight, Percent, Beef, Wheat, Sandwich, Calculator } from 'lucide-react';
 import { HealthData, DailyHealthMetrics } from '@/types/health';
 import { CustomTooltip } from './CustomTooltip';
+import { calculateIntakeCalories, calculatePFCRatio } from '@/lib/utils/calorieCalculator';
 
 export default function Dashboard() {
   const [healthData, setHealthData] = useState<HealthData[]>([]);
@@ -50,6 +51,8 @@ export default function Dashboard() {
       protein: item.proteinG,
       fat: item.fatG,
       carbohydrate: item.carbohydrateG,
+      // 摂取カロリー（PFCから計算）
+      intakeCalories: calculateIntakeCalories(item.proteinG, item.fatG, item.carbohydrateG),
       // その他の栄養素
       fiber: item.fiberG,
       sugar: item.sugarG,
@@ -77,6 +80,10 @@ export default function Dashboard() {
       protein: latest.proteinG,
       fat: latest.fatG,
       carbohydrate: latest.carbohydrateG,
+      // 摂取カロリー（PFCから計算）
+      intakeCalories: calculateIntakeCalories(latest.proteinG, latest.fatG, latest.carbohydrateG),
+      // PFC比率
+      pfcRatio: calculatePFCRatio(latest.proteinG, latest.fatG, latest.carbohydrateG),
     };
   };
 
@@ -111,7 +118,7 @@ export default function Dashboard() {
         </div>
 
         {latestMetrics && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4 mb-8">
             <div className="bg-white p-6 rounded-lg shadow">
               <div className="flex items-center justify-between">
                 <div>
@@ -216,6 +223,27 @@ export default function Dashboard() {
                 <Wheat className="w-8 h-8 text-amber-600" />
               </div>
             </div>
+
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">摂取カロリー</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {latestMetrics.intakeCalories !== null && latestMetrics.intakeCalories !== undefined 
+                      ? `${latestMetrics.intakeCalories.toFixed(0)} kcal` 
+                      : '-'}
+                  </p>
+                  {latestMetrics.pfcRatio && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      P:{latestMetrics.pfcRatio.protein.toFixed(0)}% 
+                      F:{latestMetrics.pfcRatio.fat.toFixed(0)}% 
+                      C:{latestMetrics.pfcRatio.carbohydrate.toFixed(0)}%
+                    </p>
+                  )}
+                </div>
+                <Calculator className="w-8 h-8 text-indigo-500" />
+              </div>
+            </div>
           </div>
         )}
 
@@ -289,6 +317,21 @@ export default function Dashboard() {
                 <Line type="monotone" dataKey="protein" stroke="#EF4444" name="タンパク質 (g)" connectNulls={false} />
                 <Line type="monotone" dataKey="fat" stroke="#F59E0B" name="脂質 (g)" connectNulls={false} />
                 <Line type="monotone" dataKey="carbohydrate" stroke="#D97706" name="炭水化物 (g)" connectNulls={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow lg:col-span-2">
+            <h2 className="text-xl font-semibold mb-4">摂取カロリー vs 消費カロリー</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Line type="monotone" dataKey="intakeCalories" stroke="#6366F1" name="摂取カロリー (kcal)" strokeWidth={2} connectNulls={false} />
+                <Line type="monotone" dataKey="calories" stroke="#F97316" name="消費カロリー (kcal)" strokeWidth={2} connectNulls={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
