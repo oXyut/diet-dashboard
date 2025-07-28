@@ -73,6 +73,7 @@ export default function Dashboard() {
         console.log('🏆 Active goal:', activeGoal);
         console.log('📅 Yesterday date (JST):', yesterdayStr);
         console.log('💪 Target health data:', targetHealthData);
+        console.log('📊 All health data dates:', healthData.map(d => ({ date: d.date, id: d.id })));
         
         // 目標データの妥当性確認
         if (activeGoal && activeGoal.start_date && activeGoal.end_date) {
@@ -168,6 +169,9 @@ export default function Dashboard() {
     if (!targetData) {
       targetData = healthData[0];
     }
+    
+    console.log('🍽️ getLatestMetrics - Yesterday:', yesterdayStr);
+    console.log('🍽️ getLatestMetrics - Target data:', targetData);
     
     // 前日のデータを取得（体重変化計算用）
     const targetIndex = healthData.findIndex(data => data.id === targetData.id);
