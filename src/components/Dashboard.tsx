@@ -161,39 +161,79 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold text-gray-900">ダイエットダッシュボード</h1>
         </div>
         
-        <div className="mb-6 space-y-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
-            <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-blue-800">
-              <p className="font-semibold mb-1">食事の詳細情報について</p>
-              <p>
-                詳しい食事内容や栄養バランスは
-                <a 
-                  href="https://www.asken.jp" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="underline font-medium hover:text-blue-900"
-                >
-                  「あすけん」アプリ
-                </a>
-                でご確認いただけます。
-              </p>
-              {process.env.NEXT_PUBLIC_ASKEN_MEMBER_ID && (
-                <p className="mt-1 text-xs">会員ID: {process.env.NEXT_PUBLIC_ASKEN_MEMBER_ID}</p>
-              )}
-            </div>
+        {/* 目標進捗セクション（最優先表示） */}
+        {goalProgress && (
+          <div className="mb-8">
+            <GoalProgressBar progress={goalProgress} />
           </div>
-          
-          <select 
-            value={dateRange} 
-            onChange={(e) => setDateRange(Number(e.target.value))}
-            className="px-4 py-2 border border-gray-300 rounded-lg"
-          >
-            <option value={7}>過去7日間</option>
-            <option value={30}>過去30日間</option>
-            <option value={90}>過去90日間</option>
-          </select>
+        )}
+        
+        {/* タブナビゲーション */}
+        <div className="mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'overview'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Activity className="w-4 h-4 inline mr-2" />
+                今日の状況
+              </button>
+              <button
+                onClick={() => setActiveTab('goals')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'goals'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Target className="w-4 h-4 inline mr-2" />
+                目標比較
+              </button>
+              <button
+                onClick={() => setActiveTab('charts')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'charts'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                📊 詳細チャート
+              </button>
+            </nav>
+          </div>
         </div>
+
+        {/* 今日の状況タブ */}
+        {activeTab === 'overview' && (
+          <div className="space-y-6">
+            <div className="mb-6 space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+                <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-blue-800">
+                  <p className="font-semibold mb-1">食事の詳細情報について</p>
+                  <p>
+                    詳しい食事内容や栄養バランスは
+                    <a 
+                      href="https://www.asken.jp" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="underline font-medium hover:text-blue-900"
+                    >
+                      「あすけん」アプリ
+                    </a>
+                    でご確認いただけます。
+                  </p>
+                  {process.env.NEXT_PUBLIC_ASKEN_MEMBER_ID && (
+                    <p className="mt-1 text-xs">会員ID: {process.env.NEXT_PUBLIC_ASKEN_MEMBER_ID}</p>
+                  )}
+                </div>
+              </div>
+            </div>
 
         {latestMetrics && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4 mb-8">
@@ -323,8 +363,63 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
+            )}
+            
+            {/* 基本的なグラフ表示 */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+              <div className="bg-white p-6 rounded-lg shadow">
+                <h2 className="text-xl font-semibold mb-4">体重推移（過去30日）</h2>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                    <Line type="monotone" dataKey="weight" stroke="#3B82F6" name="体重 (kg)" connectNulls={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg shadow">
+                <h2 className="text-xl font-semibold mb-4">摂取カロリー vs 消費カロリー</h2>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                    <Line type="monotone" dataKey="intakeCalories" stroke="#6366F1" name="摂取カロリー (kcal)" strokeWidth={2} connectNulls={false} />
+                    <Line type="monotone" dataKey="calories" stroke="#F97316" name="消費カロリー (kcal)" strokeWidth={2} connectNulls={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* 目標比較タブ */}
+        {activeTab === 'goals' && (
+          <div className="space-y-6">
+            {goalProgress ? (
+              <GoalComparisonChart 
+                goal={goalProgress.goal} 
+                healthData={healthData} 
+                dateRange={dateRange} 
+              />
+            ) : (
+              <div className="bg-white p-6 rounded-lg shadow text-center">
+                <p className="text-gray-500 mb-4">目標データが設定されていません</p>
+                <p className="text-sm text-gray-400">
+                  Supabaseにgoalsテーブルを作成し、目標データを挿入してください
+                </p>
+              </div>
+            )}
+          </div>
         )}
 
+        {/* 詳細チャートタブ */}
         {activeTab === 'charts' && (
           <div className="space-y-6">
             <div className="mb-6">
