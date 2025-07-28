@@ -55,8 +55,16 @@ export default function Dashboard() {
       if (goalsData.length > 0 && healthData.length > 0) {
         const activeGoal = goalsData[0]; // 最初のアクティブな目標を使用
         const latestHealthData = healthData[0];
-        const progress = calculateGoalProgress(activeGoal, latestHealthData);
-        setGoalProgress(progress);
+        
+        // 目標データの妥当性確認
+        if (activeGoal && activeGoal.startDate && activeGoal.endDate) {
+          try {
+            const progress = calculateGoalProgress(activeGoal, latestHealthData);
+            setGoalProgress(progress);
+          } catch (error) {
+            console.error('Failed to calculate goal progress:', error);
+          }
+        }
       }
     } catch (error) {
       console.error('Failed to fetch goals:', error);
@@ -68,8 +76,16 @@ export default function Dashboard() {
     if (goals.length > 0 && healthData.length > 0) {
       const activeGoal = goals[0];
       const latestHealthData = healthData[0];
-      const progress = calculateGoalProgress(activeGoal, latestHealthData);
-      setGoalProgress(progress);
+      
+      // 目標データの妥当性確認
+      if (activeGoal && activeGoal.startDate && activeGoal.endDate) {
+        try {
+          const progress = calculateGoalProgress(activeGoal, latestHealthData);
+          setGoalProgress(progress);
+        } catch (error) {
+          console.error('Failed to calculate goal progress:', error);
+        }
+      }
     }
   }, [goals, healthData]);
 
@@ -77,11 +93,11 @@ export default function Dashboard() {
     const cutoffDate = subDays(new Date(), dateRange);
     
     const filteredData = healthData
-      .filter(item => new Date(item.date) >= cutoffDate)
+      .filter(item => item.date && new Date(item.date) >= cutoffDate)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     return filteredData.map(item => ({
-      date: format(new Date(item.date), 'MM/dd', { locale: ja }),
+      date: item.date ? format(new Date(item.date), 'MM/dd', { locale: ja }) : '-',
       weight: item.weight,
       bodyFat: item.bodyFatPercentage,
       muscleMass: item.muscleMass,

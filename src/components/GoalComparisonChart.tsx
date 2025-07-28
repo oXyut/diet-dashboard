@@ -17,10 +17,10 @@ export default function GoalComparisonChart({ goal, healthData, dateRange }: Goa
     cutoffDate.setDate(cutoffDate.getDate() - dateRange);
     
     return healthData
-      .filter(item => new Date(item.date) >= cutoffDate)
+      .filter(item => item.date && new Date(item.date) >= cutoffDate)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .map(item => ({
-        date: format(new Date(item.date), 'MM/dd', { locale: ja }),
+        date: item.date ? format(new Date(item.date), 'MM/dd', { locale: ja }) : '-',
         actualCalories: calculateIntakeCalories(item.proteinG, item.fatG, item.carbohydrateG),
         actualProtein: item.proteinG,
         actualFat: item.fatG,

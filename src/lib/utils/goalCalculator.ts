@@ -10,6 +10,12 @@ export function calculateGoalProgress(
   latestHealthData?: HealthData | null
 ): GoalProgress {
   const today = new Date();
+  
+  // 日付文字列の安全な処理
+  if (!goal.startDate || !goal.endDate) {
+    throw new Error('Goal start date and end date are required');
+  }
+  
   const startDate = parseISO(goal.startDate);
   const endDate = parseISO(goal.endDate);
   
