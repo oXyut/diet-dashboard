@@ -24,6 +24,8 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<'overview' | 'goals' | 'charts'>('overview');
 
   useEffect(() => {
+    // goalProgressを一旦リセット
+    setGoalProgress(null);
     fetchHealthData();
     fetchGoals();
   }, []);
@@ -69,10 +71,8 @@ export default function Dashboard() {
     if (goals.length > 0 && healthData.length > 0) {
       const activeGoal = goals[0];
       
-      // 昨日の日付を取得
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split('T')[0];
+      // 昨日の日付を取得（日本時間）
+      const yesterdayStr = getYesterdayInJST();
       
       // 昨日のデータを優先的に使用
       let targetHealthData = healthData.find(data => data.date === yesterdayStr);
