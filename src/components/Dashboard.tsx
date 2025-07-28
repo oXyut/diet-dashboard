@@ -59,14 +59,24 @@ export default function Dashboard() {
       // アクティブな目標の進捗を計算
       if (goalsData.length > 0 && healthData.length > 0) {
         const activeGoal = goalsData[0]; // 最初のアクティブな目標を使用
-        const latestHealthData = healthData[0];
+        
+        // 昨日の日付を取得（日本時間）
+        const yesterdayStr = getYesterdayInJST();
+        
+        // 昨日のデータを優先的に使用
+        let targetHealthData = healthData.find(data => data.date === yesterdayStr);
+        if (!targetHealthData) {
+          targetHealthData = healthData[0];
+        }
+        
         console.log('🏆 Active goal:', activeGoal);
-        console.log('💪 Latest health data:', latestHealthData);
+        console.log('📅 Yesterday date (JST):', yesterdayStr);
+        console.log('💪 Target health data:', targetHealthData);
         
         // 目標データの妥当性確認
         if (activeGoal && activeGoal.start_date && activeGoal.end_date) {
           try {
-            const progress = calculateGoalProgress(activeGoal, latestHealthData);
+            const progress = calculateGoalProgress(activeGoal, targetHealthData);
             console.log('📈 Calculated progress:', progress);
             setGoalProgress(progress);
           } catch (error) {
