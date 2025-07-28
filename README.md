@@ -1,142 +1,204 @@
-# ダイエットダッシュボード
+# Diet Dashboard
 
-iPhoneのヘルスケアアプリと連携して、日々の健康データを可視化するWebダッシュボードです。
+A dashboard application for tracking health metrics from iPhone Health app via Shortcuts integration.
 
-![Dashboard Screenshot](docs/images/dashboard-screenshot.png)
+## Architecture
 
-## 機能
+This project is currently migrating from a legacy implementation to a clean architecture pattern using:
 
-- 📊 体重・体脂肪率の推移グラフ
-- 🚶 日々の歩数表示
-- 🔥 消費カロリーの追跡
-- 📱 iPhoneショートカットアプリとの連携
-- 📝 手動データ入力フォーム
-- 🔄 5秒ごとの自動更新
+- **Clean Architecture**: Domain-driven design with clear separation of concerns
+- **Prisma ORM**: Type-safe database access with automatic migrations
+- **Repository Pattern**: Abstract data access layer
+- **Service Layer**: Business logic separation
+- **Feature Flags**: Gradual rollout of new architecture
 
-## 技術スタック
+## Project Structure
 
-- **フロントエンド**: Next.js 14, React 18, TypeScript
-- **スタイリング**: Tailwind CSS
-- **グラフ**: Recharts
-- **データ保存**: ローカルJSONファイル
-
-## セットアップ
-
-### 1. 依存関係のインストール
-
-```bash
-npm install
+```
+src/
+├── app/api/                    # API routes
+├── components/                 # React components
+├── lib/
+│   ├── repositories/          # Data access layer
+│   │   ├── interfaces/       # Repository contracts
+│   │   └── implementations/  # Concrete implementations
+│   ├── services/             # Business logic layer
+│   ├── middleware/           # Cross-cutting concerns
+│   ├── validators/           # Input validation
+│   └── utils/               # Utilities
+├── types/                    # Type definitions
+└── ...
 ```
 
-### 2. 開発サーバーの起動
+## Features
 
-```bash
-npm run dev
+- **Health Data Tracking**: Weight, body fat, muscle mass, steps, calories
+- **iPhone Integration**: Receive data via Shortcuts app
+- **Real-time Dashboard**: Auto-refreshing charts and metrics
+- **Secure API**: API key authentication
+- **Type Safety**: Full TypeScript implementation
+
+## Development
+
+### Prerequisites
+
+- Node.js 18+
+- PostgreSQL (via Supabase)
+- iPhone with Shortcuts app (for data input)
+
+### Environment Variables
+
+```env
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# API Security
+API_SECRET_KEY=your_secret_api_key
+
+# Database (Prisma)
+DATABASE_URL="postgresql://..."
+DIRECT_URL="postgresql://..."
+
+# Feature Flags
+USE_CLEAN_ARCHITECTURE=false  # Set to true to enable new architecture
 ```
 
-起動時に以下の情報が表示されます：
+### Setup
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Generate Prisma client:
+   ```bash
+   npx prisma generate
+   ```
+
+3. Run development server:
+   ```bash
+   npm run dev
+   ```
+
+### Database
+
+The application uses Supabase (PostgreSQL) with Prisma ORM for type-safe database access.
+
+#### Schema
+
+```sql
+CREATE TABLE health_data (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  date DATE UNIQUE NOT NULL,
+  weight DECIMAL(5,2),
+  body_fat_percentage DECIMAL(4,2),
+  muscle_mass DECIMAL(5,2),
+  steps INTEGER,
+  active_calories INTEGER,
+  resting_calories INTEGER,
+  total_calories INTEGER,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 ```
-========================================
-ダイエットダッシュボード起動情報
-========================================
-ローカルアクセス: http://localhost:3000
-iPhoneからアクセス: http://192.168.x.x:3000
-API エンドポイント: http://192.168.x.x:3000/api/health
-========================================
-```
 
-### 3. iPhoneショートカットの設定
+## iPhone Shortcuts Integration
 
-[docs/shortcut-setup.md](docs/shortcut-setup.md) を参照してください。
+### Setup iPhone Shortcut
 
-## 使い方
+1. Create a new Shortcut in the Shortcuts app
+2. Add "Get Contents of URL" action:
+   - URL: `https://your-app.vercel.app/api/health`
+   - Method: POST
+   - Headers:
+     - `Content-Type: application/json`
+     - `X-API-Key: your_api_secret_key`
+   - Request Body: JSON with health data
 
-### データの自動送信（推奨）
+### Example Request
 
-1. iPhoneショートカットを設定
-2. 毎日指定時刻に自動実行
-3. ダッシュボードで結果を確認
-
-### 手動データ入力
-
-1. ダッシュボード右上の「データ入力」ボタンをクリック
-2. フォームに健康データを入力
-3. 保存ボタンで送信
-
-## API仕様
-
-### POST /api/health
-
-健康データを保存します。
-
-**リクエストボディ:**
 ```json
 {
-  "date": "2025-01-26",
-  "weight": 65.5,
-  "bodyFatPercentage": 20.5,
-  "muscleMass": 50.2,
-  "steps": 10000,
-  "activeCalories": 300,
-  "restingCalories": 1500
+  "date": "2025-07-28",
+  "weight": 70.5,
+  "bodyFatPercentage": 15.2,
+  "steps": 8500,
+  "activeCalories": 450,
+  "restingCalories": 1800
 }
 ```
 
-**レスポンス:**
-```json
-{
-  "id": "1234567890",
-  "date": "2025-01-26",
-  "weight": 65.5,
-  "bodyFatPercentage": 20.5,
-  "muscleMass": 50.2,
-  "steps": 10000,
-  "activeCalories": 300,
-  "restingCalories": 1500,
-  "totalCalories": 1800,
-  "createdAt": "2025-01-26T12:00:00.000Z",
-  "updatedAt": "2025-01-26T12:00:00.000Z"
-}
-```
+## API Endpoints
 
 ### GET /api/health
+Fetch health data (public, no authentication required)
 
-保存されている全ての健康データを取得します。
+### POST /api/health  
+Submit health data (requires X-API-Key header)
 
-## データ管理
+### OPTIONS /api/health
+CORS preflight request handling
 
-- データは `data/health-data.json` に保存されます
-- 日付ごとに1レコード（同じ日付のデータは上書き）
-- null値と0値を区別（未記録 vs 実際の0）
+## Architecture Migration
 
-## 開発
+The project is gradually migrating from legacy code to clean architecture:
 
-### ビルド
+### Current State: Feature Flag Pattern
+- `USE_CLEAN_ARCHITECTURE=false`: Uses legacy Supabase client directly
+- `USE_CLEAN_ARCHITECTURE=true`: Uses Prisma with clean architecture
 
-```bash
-npm run build
-```
+### Clean Architecture Benefits
+1. **SOLID Principles**: Single responsibility, dependency inversion
+2. **Testability**: Easy to unit test with dependency injection
+3. **Maintainability**: Clear separation of concerns
+4. **Extensibility**: Easy to add new features (e.g., PFC nutrition)
 
-### リント
+### Migration Steps
+1. ✅ Implement Prisma and repository pattern
+2. ✅ Create service layer with business logic
+3. ✅ Add validation and middleware
+4. ⏳ Enable feature flag in production
+5. 🔄 Remove legacy code after testing
 
-```bash
-npm run lint
-```
+## Future Enhancements
 
-## トラブルシューティング
+- **PFC Nutrition Tracking**: Protein, fat, carbohydrate logging (ready to implement)
+- **Advanced Analytics**: Trends, correlations, predictions
+- **Data Export**: CSV, PDF reports
+- **User Management**: Multi-user support
+- **Mobile App**: Native iOS/Android apps
 
-### iPhoneから接続できない
+## Deployment
 
-1. PCとiPhoneが同じWi-Fiネットワークにいることを確認
-2. ファイアウォール設定を確認
-3. 表示されたIPアドレスが正しいか確認
+The application is deployed on Vercel with Supabase as the database.
 
-### データが表示されない
+### Production Deployment
 
-1. `data/health-data.json` が存在するか確認
-2. ブラウザの開発者ツールでエラーを確認
-3. APIエンドポイントに直接アクセスしてレスポンスを確認
+1. Deploy to Vercel:
+   ```bash
+   vercel --prod
+   ```
 
-## ライセンス
+2. Configure environment variables in Vercel dashboard
 
-MIT License
+3. Update iPhone shortcut URL to production URL
+
+## Contributing
+
+1. Create feature branch from `develop`
+2. Implement changes following clean architecture principles
+3. Add tests for new functionality
+4. Submit PR to `develop` branch
+
+## Architecture Documentation
+
+- [Clean Architecture Analysis](docs/code-analysis-solid-principles.md)
+- [Prisma Migration Plan](docs/prisma-migration-plan.md)
+- [Branch Strategy](docs/branch-strategy.md)
+- [Database Migration Strategy](docs/database-migration-strategy.md)
+
+## License
+
+Private project - All rights reserved.
