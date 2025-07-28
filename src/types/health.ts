@@ -37,3 +37,40 @@ export interface WeightTrend {
   change: number;
   changePercentage: number;
 }
+
+export interface Goal {
+  id: number;
+  name: string;
+  description?: string | null;
+  targetWeightKg?: number | null;
+  startDate: string;
+  endDate: string;
+  dailyCalorieIntakeMin?: number | null;
+  dailyCalorieIntakeMax?: number | null;
+  dailyProteinMinG?: number | null;
+  dailyProteinMaxG?: number | null;
+  dailyFatMinG?: number | null;
+  dailyFatMaxG?: number | null;
+  dailyCarbMinG?: number | null;
+  dailyCarbMaxG?: number | null;
+  dailyStepsTarget?: number | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GoalProgress {
+  goal: Goal;
+  currentWeight?: number | null;
+  daysRemaining: number;
+  totalDays: number;
+  progressPercentage: number;
+  isOnTrack: boolean;
+  dailyAchievements: {
+    calories: 'under' | 'within' | 'over' | 'no_data';
+    protein: 'under' | 'within' | 'over' | 'no_data';
+    fat: 'under' | 'within' | 'over' | 'no_data';
+    carbohydrate: 'under' | 'within' | 'over' | 'no_data';
+    steps: 'achieved' | 'not_achieved' | 'no_data';
+  };
+}

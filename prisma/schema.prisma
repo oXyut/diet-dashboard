@@ -35,3 +35,26 @@ model HealthData {
   
   @@map("health_data")
 }
+
+model Goal {
+  id                      Int      @id @default(autoincrement())
+  name                    String   @db.VarChar(100)
+  description             String?
+  targetWeightKg          Decimal? @map("target_weight_kg") @db.Decimal(5, 2)
+  startDate               DateTime @map("start_date") @db.Date
+  endDate                 DateTime @map("end_date") @db.Date
+  dailyCalorieIntakeMin   Int?     @map("daily_calorie_intake_min")
+  dailyCalorieIntakeMax   Int?     @map("daily_calorie_intake_max")
+  dailyProteinMinG        Decimal? @map("daily_protein_min_g") @db.Decimal(6, 2)
+  dailyProteinMaxG        Decimal? @map("daily_protein_max_g") @db.Decimal(6, 2)
+  dailyFatMinG            Decimal? @map("daily_fat_min_g") @db.Decimal(6, 2)
+  dailyFatMaxG            Decimal? @map("daily_fat_max_g") @db.Decimal(6, 2)
+  dailyCarbMinG           Decimal? @map("daily_carb_min_g") @db.Decimal(6, 2)
+  dailyCarbMaxG           Decimal? @map("daily_carb_max_g") @db.Decimal(6, 2)
+  dailyStepsTarget        Int?     @map("daily_steps_target")
+  isActive                Boolean  @default(true) @map("is_active")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+  
+  @@map("goals")
+}
