@@ -81,7 +81,7 @@ export default function GoalProgressBar({ progress }: GoalProgressBarProps) {
 
       {/* 日々の達成状況 */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">今日の達成状況</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-3">昨日の達成状況</h3>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <div className={`p-3 rounded-lg border ${getAchievementColor(dailyAchievements.calories)}`}>
             <p className="text-xs font-medium mb-1">摂取カロリー</p>

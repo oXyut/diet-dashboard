@@ -92,12 +92,22 @@ export default function Dashboard() {
   useEffect(() => {
     if (goals.length > 0 && healthData.length > 0) {
       const activeGoal = goals[0];
-      const latestHealthData = healthData[0];
+      
+      // 昨日の日付を取得
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+      
+      // 昨日のデータを優先的に使用
+      let targetHealthData = healthData.find(data => data.date === yesterdayStr);
+      if (!targetHealthData) {
+        targetHealthData = healthData[0];
+      }
       
       // 目標データの妥当性確認
       if (activeGoal && activeGoal.start_date && activeGoal.end_date) {
         try {
-          const progress = calculateGoalProgress(activeGoal, latestHealthData);
+          const progress = calculateGoalProgress(activeGoal, targetHealthData);
           setGoalProgress(progress);
         } catch (error) {
           console.error('Failed to calculate goal progress:', error);
@@ -136,27 +146,42 @@ export default function Dashboard() {
   const getLatestMetrics = () => {
     if (healthData.length === 0) return null;
     
-    const latest = healthData[0];
-    const previous = healthData[1];
+    // 昨日の日付を取得
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
     
-    const weightChange = latest.weight && previous?.weight 
-      ? latest.weight - previous.weight 
+    // 昨日のデータを優先的に探す
+    let targetData = healthData.find(data => data.date === yesterdayStr);
+    
+    // 昨日のデータがなければ最新のデータを使用
+    if (!targetData) {
+      targetData = healthData[0];
+    }
+    
+    // 前日のデータを取得（体重変化計算用）
+    const targetIndex = healthData.findIndex(data => data.id === targetData.id);
+    const previous = healthData[targetIndex + 1];
+    
+    const weightChange = targetData.weight && previous?.weight 
+      ? targetData.weight - previous.weight 
       : 0;
     
     return {
-      weight: latest.weight,
+      date: targetData.date,
+      weight: targetData.weight,
       weightChange,
-      bodyFat: latest.bodyFatPercentage,
-      steps: latest.steps,
-      calories: latest.totalCalories,
+      bodyFat: targetData.bodyFatPercentage,
+      steps: targetData.steps,
+      calories: targetData.totalCalories,
       // PFC栄養素
-      protein: latest.proteinG,
-      fat: latest.fatG,
-      carbohydrate: latest.carbohydrateG,
+      protein: targetData.proteinG,
+      fat: targetData.fatG,
+      carbohydrate: targetData.carbohydrateG,
       // 摂取カロリー（PFCから計算）
-      intakeCalories: calculateIntakeCalories(latest.proteinG, latest.fatG, latest.carbohydrateG),
+      intakeCalories: calculateIntakeCalories(targetData.proteinG, targetData.fatG, targetData.carbohydrateG),
       // PFC比率
-      pfcRatio: calculatePFCRatio(latest.proteinG, latest.fatG, latest.carbohydrateG),
+      pfcRatio: calculatePFCRatio(targetData.proteinG, targetData.fatG, targetData.carbohydrateG),
     };
   };
 
@@ -198,7 +223,7 @@ export default function Dashboard() {
                 }`}
               >
                 <Activity className="w-4 h-4 inline mr-2" />
-                今日の状況
+                昨日の状況
               </button>
               <button
                 onClick={() => setActiveTab('goals')}
@@ -225,9 +250,16 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* 今日の状況タブ */}
+        {/* 昨日の状況タブ */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
+            {/* 日付表示 */}
+            {latestMetrics && latestMetrics.date && (
+              <div className="text-center text-lg font-medium text-gray-700 mb-4">
+                {format(new Date(latestMetrics.date), 'yyyy年MM月dd日', { locale: ja })}の記録
+              </div>
+            )}
+            
             <div className="mb-6 space-y-4">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
                 <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
