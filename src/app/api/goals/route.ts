@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ZodError } from 'zod';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { withAuth } from '@/lib/middleware/auth';
+import { goalSchema } from '@/lib/validators/goalSchema';
 
 export async function GET(request: NextRequest) {
   try {
@@ -39,14 +42,17 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest) => {
   try {
     const supabase = getSupabaseAdmin();
     const body = await request.json();
 
+    // 許可したフィールドのみ抽出（未知のフィールドは除去される）
+    const goal = goalSchema.parse(body);
+
     const { data, error } = await supabase
       .from('goals')
-      .insert([body])
+      .insert([goal])
       .select();
 
     if (error) {
@@ -62,10 +68,17 @@ export async function POST(request: NextRequest) {
       data: data[0],
     });
   } catch (error) {
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: error.issues },
+        { status: 400 }
+      );
+    }
+
     console.error('API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
   }
-}
+});
