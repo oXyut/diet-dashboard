@@ -1,6 +1,6 @@
 import React from 'react';
 import { getAchievementColor, getAchievementText } from '@/lib/utils/goalCalculator';
-import { GoalProgress } from '@/types/health';
+import { AchievementStatus } from '@/types/health';
 import { cn } from '@/lib/utils';
 
 interface MetricsCardProps {
@@ -8,7 +8,7 @@ interface MetricsCardProps {
   value: number | null | undefined;
   unit: string;
   icon: React.ReactNode;
-  achievement?: 'under' | 'within' | 'over' | 'achieved' | 'not_achieved' | 'no_data';
+  achievement?: AchievementStatus;
   targetMin?: number | null;
   targetMax?: number | null;
   targetValue?: number | null;

@@ -1,8 +1,15 @@
 import React from 'react';
 
+interface TooltipPayloadEntry {
+  value?: number | string | null;
+  name?: string;
+  dataKey?: string | number;
+  color?: string;
+}
+
 interface CustomTooltipProps {
   active?: boolean;
-  payload?: any[];
+  payload?: TooltipPayloadEntry[];
   label?: string;
   labelFormatter?: (label: string) => string;
 }

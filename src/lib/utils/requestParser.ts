@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server'
 /**
  * リクエストボディをパースする（Content-Typeに応じて）
  */
-export async function parseRequestBody(request: NextRequest): Promise<any> {
+export async function parseRequestBody(request: NextRequest): Promise<unknown> {
   const contentType = request.headers.get('content-type')
 
   if (contentType?.includes('application/json')) {

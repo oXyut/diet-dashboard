@@ -4,6 +4,29 @@ import { IHealthDataRepository, FindManyOptions } from '../interfaces/IHealthDat
 import { HealthDataInput } from '@/lib/validators/healthDataSchema'
 
 /**
+ * health_dataテーブルの行（Supabase/PostgRESTのレスポンス形式）
+ */
+interface SupabaseHealthDataRow {
+  id: string
+  date: string
+  weight: number | null
+  body_fat_percentage: number | null
+  muscle_mass: number | null
+  steps: number | null
+  active_calories: number | null
+  resting_calories: number | null
+  total_calories: number | null
+  protein_g: number | null
+  fat_g: number | null
+  carbohydrate_g: number | null
+  fiber_g: number | null
+  sugar_g: number | null
+  sodium_mg: number | null
+  created_at: string
+  updated_at: string
+}
+
+/**
  * Supabaseクライアントを使用したリポジトリ実装（Prismaのフォールバック）
  */
 export class SupabaseHealthDataRepository implements IHealthDataRepository {
@@ -133,8 +156,10 @@ export class SupabaseHealthDataRepository implements IHealthDataRepository {
     }
   }
 
-  private mapSupabaseToHealthData(row: any): HealthData {
-    return {
+  private mapSupabaseToHealthData(row: SupabaseHealthDataRow): HealthData {
+    // Supabase（PostgREST）はDecimal列をnumberで返すため、Prisma生成型のDecimalとは
+    // 実行時の表現が異なる（利用側はNumber()で数値化しており挙動は同一）
+    const healthData: Record<keyof HealthData, unknown> = {
       id: row.id,
       date: new Date(row.date),
       weight: row.weight,
@@ -155,5 +180,6 @@ export class SupabaseHealthDataRepository implements IHealthDataRepository {
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
     }
+    return healthData as HealthData
   }
 }
