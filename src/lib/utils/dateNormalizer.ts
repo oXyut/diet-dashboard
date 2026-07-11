@@ -24,17 +24,22 @@ export function normalizeDateString(dateInput: string): string {
 /**
  * リクエストボディの日付フィールドを正規化する
  */
-export function normalizeRequestBody(body: any): any {
+export function normalizeRequestBody(body: unknown): unknown {
+  // オブジェクト以外はそのまま返し、後段のZodバリデーションに委ねる
+  if (typeof body !== 'object' || body === null) {
+    return body
+  }
+
   // キー名の正規化（スペースのトリム）
-  const normalizedBody: any = {}
+  const normalizedBody: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(body)) {
     normalizedBody[key.trim()] = value
   }
-  
+
   // 日付の正規化
-  if (normalizedBody.date) {
+  if (typeof normalizedBody.date === 'string' && normalizedBody.date) {
     normalizedBody.date = normalizeDateString(normalizedBody.date)
   }
-  
+
   return normalizedBody
 }

@@ -59,6 +59,15 @@ export interface Goal {
   updated_at: string;
 }
 
+// 範囲目標（カロリー・PFC）の達成状況
+export type RangeAchievement = 'under' | 'within' | 'over' | 'no_data';
+
+// 到達目標（歩数）の達成状況
+export type StepsAchievement = 'achieved' | 'not_achieved' | 'no_data';
+
+// すべての達成状況（UIの色・テキスト表示などで使用）
+export type AchievementStatus = RangeAchievement | StepsAchievement;
+
 export interface GoalProgress {
   goal: Goal;
   currentWeight?: number | null;
@@ -67,10 +76,10 @@ export interface GoalProgress {
   progressPercentage: number;
   isOnTrack: boolean;
   dailyAchievements: {
-    calories: 'under' | 'within' | 'over' | 'no_data';
-    protein: 'under' | 'within' | 'over' | 'no_data';
-    fat: 'under' | 'within' | 'over' | 'no_data';
-    carbohydrate: 'under' | 'within' | 'over' | 'no_data';
-    steps: 'achieved' | 'not_achieved' | 'no_data';
+    calories: RangeAchievement;
+    protein: RangeAchievement;
+    fat: RangeAchievement;
+    carbohydrate: RangeAchievement;
+    steps: StepsAchievement;
   };
 }

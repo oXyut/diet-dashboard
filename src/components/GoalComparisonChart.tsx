@@ -11,6 +11,19 @@ interface GoalComparisonChartProps {
   dateRange: number;
 }
 
+interface ChartTooltipEntry {
+  value: number | null;
+  name: string;
+  dataKey: string;
+  color?: string;
+}
+
+interface ChartTooltipProps {
+  active?: boolean;
+  payload?: ChartTooltipEntry[];
+  label?: string;
+}
+
 export default function GoalComparisonChart({ goal, healthData, dateRange }: GoalComparisonChartProps) {
   const processChartData = () => {
     const cutoffDate = new Date();
@@ -40,12 +53,12 @@ export default function GoalComparisonChart({ goal, healthData, dateRange }: Goa
 
   const chartData = processChartData();
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 border rounded-lg shadow-lg">
           <p className="font-semibold mb-2">{label}</p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry, index) => (
             <p key={index} style={{ color: entry.color }} className="text-sm">
               {entry.name}: {entry.value !== null ? entry.value.toFixed(1) : '-'}
               {entry.dataKey.includes('Calories') ? 'kcal' : 

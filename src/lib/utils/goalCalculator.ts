@@ -1,4 +1,4 @@
-import { Goal, GoalProgress, HealthData } from '@/types/health';
+import { AchievementStatus, Goal, GoalProgress, HealthData, RangeAchievement, StepsAchievement } from '@/types/health';
 import { calculateIntakeCalories } from './calorieCalculator';
 import { getTodayInJST } from './dateUtils';
 import { differenceInDays, parseISO } from 'date-fns';
@@ -109,7 +109,7 @@ function evaluateRange(
   value: number | null | undefined,
   min: number | null | undefined,
   max: number | null | undefined
-): 'under' | 'within' | 'over' | 'no_data' {
+): RangeAchievement {
   if (value == null) return 'no_data';
   if (min == null && max == null) return 'no_data';
   
@@ -124,7 +124,7 @@ function evaluateRange(
 function evaluateSteps(
   steps: number | null | undefined,
   target: number | null | undefined
-): 'achieved' | 'not_achieved' | 'no_data' {
+): StepsAchievement {
   if (steps == null || target == null) return 'no_data';
   return steps >= target ? 'achieved' : 'not_achieved';
 }
@@ -132,9 +132,7 @@ function evaluateSteps(
 /**
  * 達成状況の色を取得する
  */
-export function getAchievementColor(
-  status: 'under' | 'within' | 'over' | 'achieved' | 'not_achieved' | 'no_data'
-): string {
+export function getAchievementColor(status: AchievementStatus): string {
   switch (status) {
     case 'within':
     case 'achieved':
@@ -153,9 +151,7 @@ export function getAchievementColor(
 /**
  * 達成状況のテキストを取得する
  */
-export function getAchievementText(
-  status: 'under' | 'within' | 'over' | 'achieved' | 'not_achieved' | 'no_data'
-): string {
+export function getAchievementText(status: AchievementStatus): string {
   switch (status) {
     case 'within':
       return '目標範囲内';
