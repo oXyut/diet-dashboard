@@ -1,9 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import {
-  calculateGoalProgress,
-  getAchievementColor,
-  getAchievementText,
-} from '../goalCalculator';
+import { calculateGoalProgress, getAchievementColor, getAchievementText } from '../goalCalculator';
 import { Goal, HealthData } from '@/types/health';
 
 function makeGoal(overrides: Partial<Goal> = {}): Goal {
@@ -81,12 +77,12 @@ describe('goalCalculator', () => {
     });
 
     it('start_date / end_date が無い場合は例外を投げる', () => {
-      expect(() =>
-        calculateGoalProgress(makeGoal({ start_date: '' }))
-      ).toThrow('Goal start date and end date are required');
-      expect(() =>
-        calculateGoalProgress(makeGoal({ end_date: '' }))
-      ).toThrow('Goal start date and end date are required');
+      expect(() => calculateGoalProgress(makeGoal({ start_date: '' }))).toThrow(
+        'Goal start date and end date are required'
+      );
+      expect(() => calculateGoalProgress(makeGoal({ end_date: '' }))).toThrow(
+        'Goal start date and end date are required'
+      );
     });
   });
 

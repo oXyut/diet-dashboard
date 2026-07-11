@@ -3,22 +3,22 @@
  */
 export function normalizeDateString(dateInput: string): string {
   if (!dateInput) {
-    return new Date().toISOString().split('T')[0]
+    return new Date().toISOString().split('T')[0];
   }
 
   // "2025/07/26 13:23" -> "2025-07-26"
   if (dateInput.includes('/')) {
-    const datePart = dateInput.split(' ')[0].replace(/\//g, '-')
-    return datePart
+    const datePart = dateInput.split(' ')[0].replace(/\//g, '-');
+    return datePart;
   }
-  
+
   // "2025-07-26T..." -> "2025-07-26"
   if (dateInput.includes('T')) {
-    return dateInput.split('T')[0]
+    return dateInput.split('T')[0];
   }
-  
+
   // Already in correct format "2025-07-26"
-  return dateInput
+  return dateInput;
 }
 
 /**
@@ -27,19 +27,19 @@ export function normalizeDateString(dateInput: string): string {
 export function normalizeRequestBody(body: unknown): unknown {
   // オブジェクト以外はそのまま返し、後段のZodバリデーションに委ねる
   if (typeof body !== 'object' || body === null) {
-    return body
+    return body;
   }
 
   // キー名の正規化（スペースのトリム）
-  const normalizedBody: Record<string, unknown> = {}
+  const normalizedBody: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(body)) {
-    normalizedBody[key.trim()] = value
+    normalizedBody[key.trim()] = value;
   }
 
   // 日付の正規化
   if (typeof normalizedBody.date === 'string' && normalizedBody.date) {
-    normalizedBody.date = normalizeDateString(normalizedBody.date)
+    normalizedBody.date = normalizeDateString(normalizedBody.date);
   }
 
-  return normalizedBody
+  return normalizedBody;
 }

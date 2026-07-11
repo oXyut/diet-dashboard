@@ -16,10 +16,7 @@ function makeGoal(overrides: Partial<Goal> = {}): Goal {
   };
 }
 
-function makeHealthData(
-  date: string,
-  weight: number | null
-): HealthData {
+function makeHealthData(date: string, weight: number | null): HealthData {
   return {
     id: `hd-${date}`,
     date,
@@ -44,30 +41,23 @@ describe('weightGoalCalculator', () => {
   describe('必須項目が欠けている場合', () => {
     it('target_weight_kg が無い場合は空配列を返す', () => {
       vi.setSystemTime(new Date('2026-01-20T00:00:00Z'));
-      const result = calculateLinearWeightGoal(
-        makeGoal({ target_weight_kg: null }),
-        [makeHealthData('2026-01-01', 80)]
-      );
+      const result = calculateLinearWeightGoal(makeGoal({ target_weight_kg: null }), [
+        makeHealthData('2026-01-01', 80),
+      ]);
       expect(result).toEqual([]);
     });
 
     it('start_date / end_date が無い場合は空配列を返す', () => {
       vi.setSystemTime(new Date('2026-01-20T00:00:00Z'));
-      expect(
-        calculateLinearWeightGoal(makeGoal({ start_date: '' }), [])
-      ).toEqual([]);
-      expect(
-        calculateLinearWeightGoal(makeGoal({ end_date: '' }), [])
-      ).toEqual([]);
+      expect(calculateLinearWeightGoal(makeGoal({ start_date: '' }), [])).toEqual([]);
+      expect(calculateLinearWeightGoal(makeGoal({ end_date: '' }), [])).toEqual([]);
     });
   });
 
   describe('線形目標線の計算', () => {
     it('開始体重から目標体重まで線形に減少する目標線を生成する', () => {
       vi.setSystemTime(new Date('2026-01-20T00:00:00Z'));
-      const result = calculateLinearWeightGoal(makeGoal(), [
-        makeHealthData('2026-01-01', 80),
-      ]);
+      const result = calculateLinearWeightGoal(makeGoal(), [makeHealthData('2026-01-01', 80)]);
 
       // 表示範囲30日のうち目標期間内（1/1〜1/20）の20日分
       expect(result).toHaveLength(20);
@@ -75,17 +65,12 @@ describe('weightGoalCalculator', () => {
       // 初日は開始体重
       expect(result[0].linearTarget).toBeCloseTo(80, 5);
       // 総日数30日で10kg減 → 1日あたり1/3kg減。19日経過時点: 80 - 19/3
-      expect(result[result.length - 1].linearTarget).toBeCloseTo(
-        80 - (10 / 30) * 19,
-        5
-      );
+      expect(result[result.length - 1].linearTarget).toBeCloseTo(80 - (10 / 30) * 19, 5);
     });
 
     it('targetWeight は全行で目標体重になる', () => {
       vi.setSystemTime(new Date('2026-01-20T00:00:00Z'));
-      const result = calculateLinearWeightGoal(makeGoal(), [
-        makeHealthData('2026-01-01', 80),
-      ]);
+      const result = calculateLinearWeightGoal(makeGoal(), [makeHealthData('2026-01-01', 80)]);
       expect(result.length).toBeGreaterThan(0);
       for (const row of result) {
         expect(row.targetWeight).toBe(70);
@@ -94,9 +79,7 @@ describe('weightGoalCalculator', () => {
 
     it('linearTarget は目標体重を下回らない（クランプされる）', () => {
       vi.setSystemTime(new Date('2026-01-20T00:00:00Z'));
-      const result = calculateLinearWeightGoal(makeGoal(), [
-        makeHealthData('2026-01-01', 80),
-      ]);
+      const result = calculateLinearWeightGoal(makeGoal(), [makeHealthData('2026-01-01', 80)]);
       for (const row of result) {
         expect(row.linearTarget).toBeGreaterThanOrEqual(70);
       }
@@ -105,29 +88,21 @@ describe('weightGoalCalculator', () => {
     it('目標期間外の日付は含まれない', () => {
       // 2/10時点: 表示範囲は1/11〜2/10だが、目標期間は1/31まで
       vi.setSystemTime(new Date('2026-02-10T00:00:00Z'));
-      const result = calculateLinearWeightGoal(makeGoal(), [
-        makeHealthData('2026-01-01', 80),
-      ]);
+      const result = calculateLinearWeightGoal(makeGoal(), [makeHealthData('2026-01-01', 80)]);
       // 1/11〜1/31 の21日分のみ
       expect(result).toHaveLength(21);
     });
 
     it('dateRange を指定すると表示範囲が変わる', () => {
       vi.setSystemTime(new Date('2026-01-20T00:00:00Z'));
-      const result = calculateLinearWeightGoal(
-        makeGoal(),
-        [makeHealthData('2026-01-01', 80)],
-        5
-      );
+      const result = calculateLinearWeightGoal(makeGoal(), [makeHealthData('2026-01-01', 80)], 5);
       // 1/15〜1/20 の6日分
       expect(result).toHaveLength(6);
     });
 
     it('日付キーは年情報を含む yyyy-MM-dd 形式で返す', () => {
       vi.setSystemTime(new Date('2026-01-20T00:00:00Z'));
-      const result = calculateLinearWeightGoal(makeGoal(), [
-        makeHealthData('2026-01-01', 80),
-      ]);
+      const result = calculateLinearWeightGoal(makeGoal(), [makeHealthData('2026-01-01', 80)]);
       expect(result[0].date).toBe('2026-01-01');
       expect(result[result.length - 1].date).toBe('2026-01-20');
       for (const row of result) {

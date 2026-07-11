@@ -1,6 +1,7 @@
 # PFC機能デプロイメントガイド
 
 ## 概要
+
 このドキュメントでは、PFC（タンパク質、脂質、炭水化物）栄養素トラッキング機能をデプロイする手順を説明します。
 
 ## デプロイ手順
@@ -11,7 +12,7 @@ Supabaseデータベースに以下のSQLを実行してください：
 
 ```sql
 -- Add PFC nutrition fields to health_data table
-ALTER TABLE "health_data" 
+ALTER TABLE "health_data"
 ADD COLUMN IF NOT EXISTS "protein_g" DECIMAL(6, 2),
 ADD COLUMN IF NOT EXISTS "fat_g" DECIMAL(6, 2),
 ADD COLUMN IF NOT EXISTS "carbohydrate_g" DECIMAL(6, 2),
@@ -21,6 +22,7 @@ ADD COLUMN IF NOT EXISTS "sodium_mg" DECIMAL(7, 2);
 ```
 
 実行方法：
+
 1. Supabaseダッシュボードにログイン
 2. SQL Editorを開く
 3. 上記のSQLを貼り付けて実行
@@ -41,6 +43,7 @@ git push origin main
 デプロイ後、以下の機能が利用可能になります：
 
 1. **iPhoneショートカットからのPFCデータ送信**
+
    ```json
    {
      "date": "2025-07-28",
@@ -60,14 +63,14 @@ git push origin main
 
 ## 新しいフィールド
 
-| フィールド名 | 型 | 説明 |
-|------------|---|------|
-| proteinG | Decimal(6,2) | タンパク質（グラム） |
-| fatG | Decimal(6,2) | 脂質（グラム） |
-| carbohydrateG | Decimal(6,2) | 炭水化物（グラム） |
-| fiberG | Decimal(5,2) | 食物繊維（グラム） |
-| sugarG | Decimal(5,2) | 糖質（グラム） |
-| sodiumMg | Decimal(7,2) | ナトリウム（ミリグラム） |
+| フィールド名  | 型           | 説明                     |
+| ------------- | ------------ | ------------------------ |
+| proteinG      | Decimal(6,2) | タンパク質（グラム）     |
+| fatG          | Decimal(6,2) | 脂質（グラム）           |
+| carbohydrateG | Decimal(6,2) | 炭水化物（グラム）       |
+| fiberG        | Decimal(5,2) | 食物繊維（グラム）       |
+| sugarG        | Decimal(5,2) | 糖質（グラム）           |
+| sodiumMg      | Decimal(7,2) | ナトリウム（ミリグラム） |
 
 ## 注意事項
 

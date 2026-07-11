@@ -10,10 +10,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const active = searchParams.get('active');
 
-    let query = supabase
-      .from('goals')
-      .select('*')
-      .order('created_at', { ascending: false });
+    let query = supabase.from('goals').select('*').order('created_at', { ascending: false });
 
     if (active === 'true') {
       query = query.eq('is_active', true);
@@ -35,10 +32,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -50,10 +44,7 @@ export const POST = withAuth(async (request: NextRequest) => {
     // 許可したフィールドのみ抽出（未知のフィールドは除去される）
     const goal = goalSchema.parse(body);
 
-    const { data, error } = await supabase
-      .from('goals')
-      .insert([goal])
-      .select();
+    const { data, error } = await supabase.from('goals').insert([goal]).select();
 
     if (error) {
       console.error('Supabase error:', error);
@@ -76,9 +67,6 @@ export const POST = withAuth(async (request: NextRequest) => {
     }
 
     console.error('API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

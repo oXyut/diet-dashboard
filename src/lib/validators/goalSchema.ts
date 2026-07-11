@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 // goalsテーブルのカラムに対応する許可フィールドのみを定義
 // （未知のフィールドはparse時に除去され、マスアサインメントを防ぐ）
@@ -18,6 +18,6 @@ export const goalSchema = z.object({
   daily_carb_max_g: z.number().nonnegative().nullable().optional(),
   daily_steps_target: z.number().int().nonnegative().nullable().optional(),
   is_active: z.boolean().optional(),
-})
+});
 
-export type GoalInput = z.infer<typeof goalSchema>
+export type GoalInput = z.infer<typeof goalSchema>;

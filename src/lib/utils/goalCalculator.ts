@@ -1,4 +1,11 @@
-import { AchievementStatus, Goal, GoalProgress, HealthData, RangeAchievement, StepsAchievement } from '@/types/health';
+import {
+  AchievementStatus,
+  Goal,
+  GoalProgress,
+  HealthData,
+  RangeAchievement,
+  StepsAchievement,
+} from '@/types/health';
 import { calculateIntakeCalories } from './calorieCalculator';
 import { getTodayInJST } from './dateUtils';
 import { differenceInDays, parseISO } from 'date-fns';
@@ -12,22 +19,22 @@ export function calculateGoalProgress(
 ): GoalProgress {
   // 実行環境のタイムゾーンに依存しないよう、日本時間の「今日」を基準にする
   const today = parseISO(getTodayInJST());
-  
+
   // 日付文字列の安全な処理
   if (!goal.start_date || !goal.end_date) {
     throw new Error('Goal start date and end date are required');
   }
-  
+
   const startDate = parseISO(goal.start_date);
   const endDate = parseISO(goal.end_date);
-  
+
   const totalDays = differenceInDays(endDate, startDate) + 1;
   const daysElapsed = Math.max(0, differenceInDays(today, startDate) + 1);
   const daysRemaining = Math.max(0, differenceInDays(endDate, today));
-  
+
   // 期間の進捗率を計算
   const progressPercentage = Math.min(100, (daysElapsed / totalDays) * 100);
-  
+
   // 体重の進捗を評価
   let isOnTrack = true;
   if (goal.target_weight_kg && latestHealthData?.weight) {
@@ -36,13 +43,17 @@ export function calculateGoalProgress(
     // 体重減少の場合を想定
     const currentWeight = latestHealthData.weight;
     if (currentWeight > goal.target_weight_kg) {
-      isOnTrack = expectedProgress > 0.5 ? currentWeight <= goal.target_weight_kg + (currentWeight - goal.target_weight_kg) * (1 - expectedProgress) : true;
+      isOnTrack =
+        expectedProgress > 0.5
+          ? currentWeight <=
+            goal.target_weight_kg + (currentWeight - goal.target_weight_kg) * (1 - expectedProgress)
+          : true;
     }
   }
-  
+
   // 日々の達成状況を評価
   const dailyAchievements = evaluateDailyAchievements(goal, latestHealthData);
-  
+
   return {
     goal,
     currentWeight: latestHealthData?.weight || null,
@@ -76,23 +87,15 @@ function evaluateDailyAchievements(
     healthData.fatG,
     healthData.carbohydrateG
   );
-  
+
   return {
     calories: evaluateRange(
       intakeCalories,
       goal.daily_calorie_intake_min,
       goal.daily_calorie_intake_max
     ),
-    protein: evaluateRange(
-      healthData.proteinG,
-      goal.daily_protein_min_g,
-      goal.daily_protein_max_g
-    ),
-    fat: evaluateRange(
-      healthData.fatG,
-      goal.daily_fat_min_g,
-      goal.daily_fat_max_g
-    ),
+    protein: evaluateRange(healthData.proteinG, goal.daily_protein_min_g, goal.daily_protein_max_g),
+    fat: evaluateRange(healthData.fatG, goal.daily_fat_min_g, goal.daily_fat_max_g),
     carbohydrate: evaluateRange(
       healthData.carbohydrateG,
       goal.daily_carb_min_g,
@@ -112,7 +115,7 @@ function evaluateRange(
 ): RangeAchievement {
   if (value == null) return 'no_data';
   if (min == null && max == null) return 'no_data';
-  
+
   if (min != null && value < min) return 'under';
   if (max != null && value > max) return 'over';
   return 'within';
