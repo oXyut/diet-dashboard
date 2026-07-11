@@ -45,15 +45,6 @@ export function calculateLinearWeightGoal(
   const totalDays = differenceInDays(endDate, startDate);
   const dailyWeightLoss = (startWeight - goal.target_weight_kg) / totalDays;
 
-  console.log('🎯 Weight Goal Calculation:', {
-    startDate: goal.start_date,
-    endDate: goal.end_date,
-    startWeight,
-    targetWeight: goal.target_weight_kg,
-    totalDays,
-    dailyWeightLoss
-  });
-
   // 表示範囲の日付を生成（健康データと同じ形式に合わせる）
   const cutoffDate = subDays(new Date(), dateRange);
   const result: Array<{ date: string; targetWeight: number; linearTarget: number }> = [];

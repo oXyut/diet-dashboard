@@ -44,25 +44,15 @@ export default function Dashboard() {
 
   const fetchGoals = async () => {
     try {
-      console.log('🎯 Fetching goals from API...');
       const response = await fetch('/api/goals?active=true');
-      console.log('📡 Goals API response status:', response.status);
       const data = await response.json();
-      console.log('📊 Goals API data:', data);
       const goalsData = data.data || [];
-      console.log('🎯 Processed goals data:', goalsData);
       setGoals(goalsData);
-      
+
       // 目標進捗の計算はuseEffectで行うため、ここではスキップ
       // fetchGoalsが呼ばれる時点ではhealthDataが古い可能性があるため
     } catch (error) {
-      console.error('❌ Failed to fetch goals:', error);
-      if (error instanceof Error) {
-        console.error('❌ Error details:', {
-          message: error.message,
-          stack: error.stack
-        });
-      }
+      console.error('Failed to fetch goals:', error);
     }
   };
 
@@ -83,19 +73,7 @@ export default function Dashboard() {
       // 目標データの妥当性確認
       if (activeGoal && activeGoal.start_date && activeGoal.end_date) {
         try {
-          console.log('🎯 useEffect - Before calculation:', {
-            yesterdayStr,
-            targetHealthDataDate: targetHealthData.date,
-            targetHealthDataCarb: targetHealthData.carbohydrateG,
-            allHealthDates: healthData.map(d => ({ date: d.date, carb: d.carbohydrateG }))
-          });
-          
           const progress = calculateGoalProgress(activeGoal, targetHealthData);
-          console.log('🎯 useEffect - Calculated progress:', {
-            targetHealthData: targetHealthData.date,
-            carb: targetHealthData.carbohydrateG,
-            carbAchievement: progress.dailyAchievements.carbohydrate
-          });
           setGoalProgress(progress);
         } catch (error) {
           console.error('Failed to calculate goal progress:', error);
@@ -195,9 +173,6 @@ export default function Dashboard() {
     if (!targetData) {
       targetData = healthData[0];
     }
-    
-    console.log('🍽️ getLatestMetrics - Yesterday:', yesterdayStr);
-    console.log('🍽️ getLatestMetrics - Target data:', targetData);
     
     // 前日のデータを取得（体重変化計算用）
     // 配列の隣接要素ではなく、実際の日付差が1日であることを確認する
@@ -328,9 +303,6 @@ export default function Dashboard() {
                     </a>
                     でご確認いただけます。
                   </p>
-                  {process.env.NEXT_PUBLIC_ASKEN_MEMBER_ID && (
-                    <p className="mt-1 text-xs">会員ID: {process.env.NEXT_PUBLIC_ASKEN_MEMBER_ID}</p>
-                  )}
                 </div>
               </div>
             </div>
@@ -419,17 +391,7 @@ export default function Dashboard() {
               value={latestMetrics.carbohydrate}
               unit="g"
               icon={<Wheat className="w-8 h-8 text-amber-600" />}
-              achievement={(() => {
-                const achievement = goalProgress?.dailyAchievements.carbohydrate;
-                console.log('🌾 Dashboard render - Carbohydrate achievement:', {
-                  latestMetricsCarb: latestMetrics.carbohydrate,
-                  latestMetricsDate: latestMetrics.date,
-                  goalProgressCarb: goalProgress?.dailyAchievements.carbohydrate,
-                  goalProgressCurrentWeight: goalProgress?.currentWeight,
-                  fullGoalProgress: goalProgress
-                });
-                return achievement;
-              })()}
+              achievement={goalProgress?.dailyAchievements.carbohydrate}
               targetMin={goalProgress?.goal.daily_carb_min_g}
               targetMax={goalProgress?.goal.daily_carb_max_g}
             />
