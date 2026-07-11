@@ -1,11 +1,38 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
+import {
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 import { format, subDays, parseISO, differenceInDays } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import { TrendingDown, TrendingUp, Activity, Flame, Weight, Percent, Beef, Wheat, Sandwich, Calculator, Info, Target, Calendar } from 'lucide-react';
-import { HealthData, DailyHealthMetrics, Goal, GoalProgress } from '@/types/health';
+import {
+  TrendingDown,
+  TrendingUp,
+  Activity,
+  Flame,
+  Weight,
+  Percent,
+  Beef,
+  Wheat,
+  Sandwich,
+  Calculator,
+  Info,
+  Target,
+  Calendar,
+} from 'lucide-react';
+import { HealthData, Goal, GoalProgress } from '@/types/health';
 import { CustomTooltip } from './CustomTooltip';
 import { calculateIntakeCalories, calculatePFCRatio } from '@/lib/utils/calorieCalculator';
 import { calculateGoalProgress } from '@/lib/utils/goalCalculator';
@@ -60,16 +87,16 @@ export default function Dashboard() {
   useEffect(() => {
     if (goals.length > 0 && healthData.length > 0) {
       const activeGoal = goals[0];
-      
+
       // 昨日の日付を取得（日本時間）
       const yesterdayStr = getYesterdayInJST();
-      
+
       // 昨日のデータを優先的に使用
-      let targetHealthData = healthData.find(data => data.date === yesterdayStr);
+      let targetHealthData = healthData.find((data) => data.date === yesterdayStr);
       if (!targetHealthData) {
         targetHealthData = healthData[0];
       }
-      
+
       // 目標データの妥当性確認
       if (activeGoal && activeGoal.start_date && activeGoal.end_date) {
         try {
@@ -84,13 +111,13 @@ export default function Dashboard() {
 
   const processDataForCharts = () => {
     const cutoffDate = subDays(new Date(), dateRange);
-    
+
     const filteredData = healthData
-      .filter(item => item.date && new Date(item.date) >= cutoffDate)
+      .filter((item) => item.date && new Date(item.date) >= cutoffDate)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     // 日付キーはYYYY-MM-DD形式で保持し、表示時のみMM/ddにフォーマットする
-    const chartData = filteredData.map(item => ({
+    const chartData = filteredData.map((item) => ({
       date: item.date,
       weight: item.weight,
       bodyFat: item.bodyFatPercentage,
@@ -113,14 +140,14 @@ export default function Dashboard() {
     if (goals.length > 0) {
       const goal = goals[0];
       const goalData = calculateLinearWeightGoal(goal, healthData, dateRange);
-      
+
       // chartDataと目標データをマージ
-      return chartData.map(item => {
-        const goalItem = goalData.find(g => g.date === item.date);
+      return chartData.map((item) => {
+        const goalItem = goalData.find((g) => g.date === item.date);
         return {
           ...item,
           targetWeight: goalItem?.targetWeight,
-          linearTarget: goalItem?.linearTarget
+          linearTarget: goalItem?.linearTarget,
         };
       });
     }
@@ -142,7 +169,7 @@ export default function Dashboard() {
     data: ReturnType<typeof processDataForCharts>
   ): [number, number] | [string, string] => {
     const weightValues = data
-      .flatMap(item => [
+      .flatMap((item) => [
         item.weight,
         'targetWeight' in item ? item.targetWeight : undefined,
         'linearTarget' in item ? item.linearTarget : undefined,
@@ -162,31 +189,33 @@ export default function Dashboard() {
 
   const getLatestMetrics = () => {
     if (healthData.length === 0) return null;
-    
+
     // 昨日の日付を取得（日本時間）
     const yesterdayStr = getYesterdayInJST();
-    
+
     // 昨日のデータを優先的に探す
-    let targetData = healthData.find(data => data.date === yesterdayStr);
-    
+    let targetData = healthData.find((data) => data.date === yesterdayStr);
+
     // 昨日のデータがなければ最新のデータを使用
     if (!targetData) {
       targetData = healthData[0];
     }
-    
+
     // 前日のデータを取得（体重変化計算用）
     // 配列の隣接要素ではなく、実際の日付差が1日であることを確認する
     // （欠損日がある場合は数日分の差になってしまうため、前日比は表示しない）
-    const targetIndex = healthData.findIndex(data => data.id === targetData.id);
+    const targetIndex = healthData.findIndex((data) => data.id === targetData.id);
     const previous = healthData[targetIndex + 1];
-    const isPreviousDay = previous?.date && targetData.date
-      ? differenceInDays(parseISO(targetData.date), parseISO(previous.date)) === 1
-      : false;
+    const isPreviousDay =
+      previous?.date && targetData.date
+        ? differenceInDays(parseISO(targetData.date), parseISO(previous.date)) === 1
+        : false;
 
-    const weightChange = isPreviousDay && targetData.weight && previous?.weight
-      ? targetData.weight - previous.weight
-      : 0;
-    
+    const weightChange =
+      isPreviousDay && targetData.weight && previous?.weight
+        ? targetData.weight - previous.weight
+        : 0;
+
     return {
       date: targetData.date,
       weight: targetData.weight,
@@ -199,7 +228,11 @@ export default function Dashboard() {
       fat: targetData.fatG,
       carbohydrate: targetData.carbohydrateG,
       // 摂取カロリー（PFCから計算）
-      intakeCalories: calculateIntakeCalories(targetData.proteinG, targetData.fatG, targetData.carbohydrateG),
+      intakeCalories: calculateIntakeCalories(
+        targetData.proteinG,
+        targetData.fatG,
+        targetData.carbohydrateG
+      ),
       // PFC比率
       pfcRatio: calculatePFCRatio(targetData.proteinG, targetData.fatG, targetData.carbohydrateG),
     };
@@ -221,10 +254,9 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Yuto's Diet Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Yuto&apos;s Diet Dashboard</h1>
         </div>
-        
-        
+
         {/* タブナビゲーション */}
         <div className="mb-6">
           <div className="border-b border-gray-200">
@@ -279,13 +311,16 @@ export default function Dashboard() {
                     <Calendar className="w-4 h-4" />
                     <span>目標まで残り {goalProgress.daysRemaining} 日</span>
                     <span className="text-xs">
-                      ({goalProgress.goal.target_weight_kg && `目標: ${goalProgress.goal.target_weight_kg}kg`})
+                      (
+                      {goalProgress.goal.target_weight_kg &&
+                        `目標: ${goalProgress.goal.target_weight_kg}kg`}
+                      )
                     </span>
                   </div>
                 )}
               </div>
             )}
-            
+
             <div className="mb-6 space-y-4">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
                 <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
@@ -293,9 +328,9 @@ export default function Dashboard() {
                   <p className="font-semibold mb-1">食事の詳細情報について</p>
                   <p>
                     詳しい食事内容や栄養バランスは
-                    <a 
-                      href="https://www.asken.jp" 
-                      target="_blank" 
+                    <a
+                      href="https://www.asken.jp"
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="underline font-medium hover:text-blue-900"
                     >
@@ -307,105 +342,113 @@ export default function Dashboard() {
               </div>
             </div>
 
-        {latestMetrics && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {/* 体重カード */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">体重</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {latestMetrics.weight !== null && latestMetrics.weight !== undefined 
-                      ? `${latestMetrics.weight.toFixed(1)} kg` 
-                      : '-'}
-                  </p>
-                  {latestMetrics.weight !== null && latestMetrics.weight !== undefined && latestMetrics.weightChange !== 0 && (
-                    <p className={`text-sm ${latestMetrics.weightChange > 0 ? 'text-red-600' : 'text-green-600'} flex items-center mt-1`}>
-                      {latestMetrics.weightChange > 0 ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
-                      {Math.abs(latestMetrics.weightChange).toFixed(1)} kg
-                    </p>
-                  )}
+            {latestMetrics && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                {/* 体重カード */}
+                <div className="bg-white p-6 rounded-lg shadow">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">体重</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {latestMetrics.weight !== null && latestMetrics.weight !== undefined
+                          ? `${latestMetrics.weight.toFixed(1)} kg`
+                          : '-'}
+                      </p>
+                      {latestMetrics.weight !== null &&
+                        latestMetrics.weight !== undefined &&
+                        latestMetrics.weightChange !== 0 && (
+                          <p
+                            className={`text-sm ${latestMetrics.weightChange > 0 ? 'text-red-600' : 'text-green-600'} flex items-center mt-1`}
+                          >
+                            {latestMetrics.weightChange > 0 ? (
+                              <TrendingUp className="w-4 h-4 mr-1" />
+                            ) : (
+                              <TrendingDown className="w-4 h-4 mr-1" />
+                            )}
+                            {Math.abs(latestMetrics.weightChange).toFixed(1)} kg
+                          </p>
+                        )}
+                    </div>
+                    <Weight className="w-8 h-8 text-blue-500" />
+                  </div>
                 </div>
-                <Weight className="w-8 h-8 text-blue-500" />
-              </div>
-            </div>
 
-            {/* 体脂肪率カード */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">体脂肪率</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {latestMetrics.bodyFat !== null && latestMetrics.bodyFat !== undefined 
-                      ? `${latestMetrics.bodyFat.toFixed(1)}%` 
-                      : '-'}
-                  </p>
+                {/* 体脂肪率カード */}
+                <div className="bg-white p-6 rounded-lg shadow">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">体脂肪率</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {latestMetrics.bodyFat !== null && latestMetrics.bodyFat !== undefined
+                          ? `${latestMetrics.bodyFat.toFixed(1)}%`
+                          : '-'}
+                      </p>
+                    </div>
+                    <Percent className="w-8 h-8 text-purple-500" />
+                  </div>
                 </div>
-                <Percent className="w-8 h-8 text-purple-500" />
+
+                {/* 統合されたメトリクスカード */}
+                <MetricsCard
+                  title="歩数"
+                  value={latestMetrics.steps}
+                  unit="歩"
+                  icon={<Activity className="w-8 h-8 text-green-500" />}
+                  achievement={goalProgress?.dailyAchievements.steps}
+                  targetValue={goalProgress?.goal.daily_steps_target}
+                />
+
+                <MetricsCard
+                  title="摂取カロリー"
+                  value={latestMetrics.intakeCalories}
+                  unit="kcal"
+                  icon={<Calculator className="w-8 h-8 text-indigo-500" />}
+                  achievement={goalProgress?.dailyAchievements.calories}
+                  targetMin={goalProgress?.goal.daily_calorie_intake_min}
+                  targetMax={goalProgress?.goal.daily_calorie_intake_max}
+                  ratio={latestMetrics.pfcRatio}
+                />
+
+                <MetricsCard
+                  title="タンパク質"
+                  value={latestMetrics.protein}
+                  unit="g"
+                  icon={<Beef className="w-8 h-8 text-red-500" />}
+                  achievement={goalProgress?.dailyAchievements.protein}
+                  targetMin={goalProgress?.goal.daily_protein_min_g}
+                  targetMax={goalProgress?.goal.daily_protein_max_g}
+                />
+
+                <MetricsCard
+                  title="脂質"
+                  value={latestMetrics.fat}
+                  unit="g"
+                  icon={<Sandwich className="w-8 h-8 text-yellow-500" />}
+                  achievement={goalProgress?.dailyAchievements.fat}
+                  targetMin={goalProgress?.goal.daily_fat_min_g}
+                  targetMax={goalProgress?.goal.daily_fat_max_g}
+                />
+
+                <MetricsCard
+                  title="炭水化物"
+                  value={latestMetrics.carbohydrate}
+                  unit="g"
+                  icon={<Wheat className="w-8 h-8 text-amber-600" />}
+                  achievement={goalProgress?.dailyAchievements.carbohydrate}
+                  targetMin={goalProgress?.goal.daily_carb_min_g}
+                  targetMax={goalProgress?.goal.daily_carb_max_g}
+                />
+
+                {/* 消費カロリー（目標なし） */}
+                <MetricsCard
+                  title="消費カロリー"
+                  value={latestMetrics.calories}
+                  unit="kcal"
+                  icon={<Flame className="w-8 h-8 text-orange-500" />}
+                />
               </div>
-            </div>
+            )}
 
-            {/* 統合されたメトリクスカード */}
-            <MetricsCard
-              title="歩数"
-              value={latestMetrics.steps}
-              unit="歩"
-              icon={<Activity className="w-8 h-8 text-green-500" />}
-              achievement={goalProgress?.dailyAchievements.steps}
-              targetValue={goalProgress?.goal.daily_steps_target}
-            />
-
-            <MetricsCard
-              title="摂取カロリー"
-              value={latestMetrics.intakeCalories}
-              unit="kcal"
-              icon={<Calculator className="w-8 h-8 text-indigo-500" />}
-              achievement={goalProgress?.dailyAchievements.calories}
-              targetMin={goalProgress?.goal.daily_calorie_intake_min}
-              targetMax={goalProgress?.goal.daily_calorie_intake_max}
-              ratio={latestMetrics.pfcRatio}
-            />
-
-            <MetricsCard
-              title="タンパク質"
-              value={latestMetrics.protein}
-              unit="g"
-              icon={<Beef className="w-8 h-8 text-red-500" />}
-              achievement={goalProgress?.dailyAchievements.protein}
-              targetMin={goalProgress?.goal.daily_protein_min_g}
-              targetMax={goalProgress?.goal.daily_protein_max_g}
-            />
-
-            <MetricsCard
-              title="脂質"
-              value={latestMetrics.fat}
-              unit="g"
-              icon={<Sandwich className="w-8 h-8 text-yellow-500" />}
-              achievement={goalProgress?.dailyAchievements.fat}
-              targetMin={goalProgress?.goal.daily_fat_min_g}
-              targetMax={goalProgress?.goal.daily_fat_max_g}
-            />
-
-            <MetricsCard
-              title="炭水化物"
-              value={latestMetrics.carbohydrate}
-              unit="g"
-              icon={<Wheat className="w-8 h-8 text-amber-600" />}
-              achievement={goalProgress?.dailyAchievements.carbohydrate}
-              targetMin={goalProgress?.goal.daily_carb_min_g}
-              targetMax={goalProgress?.goal.daily_carb_max_g}
-            />
-
-            {/* 消費カロリー（目標なし） */}
-            <MetricsCard
-              title="消費カロリー"
-              value={latestMetrics.calories}
-              unit="kcal"
-              icon={<Flame className="w-8 h-8 text-orange-500" />}
-            />
-          </div>
-        )}
-            
             {/* 基本的なグラフ表示 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
               <div className="bg-white p-6 rounded-lg shadow">
@@ -417,11 +460,32 @@ export default function Dashboard() {
                     <YAxis domain={weightAxisDomain} />
                     <Tooltip content={<CustomTooltip labelFormatter={formatDateLabel} />} />
                     <Legend />
-                    <Line type="monotone" dataKey="weight" stroke="#3B82F6" name="実際の体重 (kg)" connectNulls={false} strokeWidth={2} />
+                    <Line
+                      type="monotone"
+                      dataKey="weight"
+                      stroke="#3B82F6"
+                      name="実際の体重 (kg)"
+                      connectNulls={false}
+                      strokeWidth={2}
+                    />
                     {goalProgress && (
                       <>
-                        <Line type="monotone" dataKey="linearTarget" stroke="#10B981" name="目標線形減少" strokeDasharray="5 5" connectNulls={false} />
-                        <Line type="monotone" dataKey="targetWeight" stroke="#EF4444" name="目標体重" strokeDasharray="3 3" connectNulls={false} />
+                        <Line
+                          type="monotone"
+                          dataKey="linearTarget"
+                          stroke="#10B981"
+                          name="目標線形減少"
+                          strokeDasharray="5 5"
+                          connectNulls={false}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="targetWeight"
+                          stroke="#EF4444"
+                          name="目標体重"
+                          strokeDasharray="3 3"
+                          connectNulls={false}
+                        />
                       </>
                     )}
                   </LineChart>
@@ -437,23 +501,37 @@ export default function Dashboard() {
                     <YAxis />
                     <Tooltip content={<CustomTooltip labelFormatter={formatDateLabel} />} />
                     <Legend />
-                    <Line type="monotone" dataKey="intakeCalories" stroke="#6366F1" name="摂取カロリー (kcal)" strokeWidth={2} connectNulls={false} />
-                    <Line type="monotone" dataKey="calories" stroke="#F97316" name="消費カロリー (kcal)" strokeWidth={2} connectNulls={false} />
+                    <Line
+                      type="monotone"
+                      dataKey="intakeCalories"
+                      stroke="#6366F1"
+                      name="摂取カロリー (kcal)"
+                      strokeWidth={2}
+                      connectNulls={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="calories"
+                      stroke="#F97316"
+                      name="消費カロリー (kcal)"
+                      strokeWidth={2}
+                      connectNulls={false}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             </div>
           </div>
         )}
-        
+
         {/* 目標比較タブ */}
         {activeTab === 'goals' && (
           <div className="space-y-6">
             {goalProgress ? (
-              <GoalComparisonChart 
-                goal={goalProgress.goal} 
-                healthData={healthData} 
-                dateRange={dateRange} 
+              <GoalComparisonChart
+                goal={goalProgress.goal}
+                healthData={healthData}
+                dateRange={dateRange}
               />
             ) : (
               <div className="bg-white p-6 rounded-lg shadow text-center">
@@ -470,8 +548,8 @@ export default function Dashboard() {
         {activeTab === 'charts' && (
           <div className="space-y-6">
             <div className="mb-6">
-              <select 
-                value={dateRange} 
+              <select
+                value={dateRange}
                 onChange={(e) => setDateRange(Number(e.target.value))}
                 className="px-4 py-2 border border-gray-300 rounded-lg"
               >
@@ -491,11 +569,32 @@ export default function Dashboard() {
                     <YAxis domain={weightAxisDomain} />
                     <Tooltip content={<CustomTooltip labelFormatter={formatDateLabel} />} />
                     <Legend />
-                    <Line type="monotone" dataKey="weight" stroke="#3B82F6" name="実際の体重 (kg)" connectNulls={false} strokeWidth={2} />
+                    <Line
+                      type="monotone"
+                      dataKey="weight"
+                      stroke="#3B82F6"
+                      name="実際の体重 (kg)"
+                      connectNulls={false}
+                      strokeWidth={2}
+                    />
                     {goalProgress && (
                       <>
-                        <Line type="monotone" dataKey="linearTarget" stroke="#10B981" name="目標線形減少" strokeDasharray="5 5" connectNulls={false} />
-                        <Line type="monotone" dataKey="targetWeight" stroke="#EF4444" name="目標体重" strokeDasharray="3 3" connectNulls={false} />
+                        <Line
+                          type="monotone"
+                          dataKey="linearTarget"
+                          stroke="#10B981"
+                          name="目標線形減少"
+                          strokeDasharray="5 5"
+                          connectNulls={false}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="targetWeight"
+                          stroke="#EF4444"
+                          name="目標体重"
+                          strokeDasharray="3 3"
+                          connectNulls={false}
+                        />
                       </>
                     )}
                   </LineChart>
@@ -511,8 +610,20 @@ export default function Dashboard() {
                     <YAxis />
                     <Tooltip content={<CustomTooltip labelFormatter={formatDateLabel} />} />
                     <Legend />
-                    <Line type="monotone" dataKey="bodyFat" stroke="#8B5CF6" name="体脂肪率 (%)" connectNulls={false} />
-                    <Line type="monotone" dataKey="muscleMass" stroke="#10B981" name="筋肉量 (kg)" connectNulls={false} />
+                    <Line
+                      type="monotone"
+                      dataKey="bodyFat"
+                      stroke="#8B5CF6"
+                      name="体脂肪率 (%)"
+                      connectNulls={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="muscleMass"
+                      stroke="#10B981"
+                      name="筋肉量 (kg)"
+                      connectNulls={false}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -540,7 +651,15 @@ export default function Dashboard() {
                     <YAxis />
                     <Tooltip content={<CustomTooltip labelFormatter={formatDateLabel} />} />
                     <Legend />
-                    <Area type="monotone" dataKey="calories" stroke="#F97316" fill="#F97316" fillOpacity={0.6} name="消費カロリー (kcal)" connectNulls={false} />
+                    <Area
+                      type="monotone"
+                      dataKey="calories"
+                      stroke="#F97316"
+                      fill="#F97316"
+                      fillOpacity={0.6}
+                      name="消費カロリー (kcal)"
+                      connectNulls={false}
+                    />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -554,9 +673,27 @@ export default function Dashboard() {
                     <YAxis />
                     <Tooltip content={<CustomTooltip labelFormatter={formatDateLabel} />} />
                     <Legend />
-                    <Line type="monotone" dataKey="protein" stroke="#EF4444" name="タンパク質 (g)" connectNulls={false} />
-                    <Line type="monotone" dataKey="fat" stroke="#F59E0B" name="脂質 (g)" connectNulls={false} />
-                    <Line type="monotone" dataKey="carbohydrate" stroke="#D97706" name="炭水化物 (g)" connectNulls={false} />
+                    <Line
+                      type="monotone"
+                      dataKey="protein"
+                      stroke="#EF4444"
+                      name="タンパク質 (g)"
+                      connectNulls={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="fat"
+                      stroke="#F59E0B"
+                      name="脂質 (g)"
+                      connectNulls={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="carbohydrate"
+                      stroke="#D97706"
+                      name="炭水化物 (g)"
+                      connectNulls={false}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -570,8 +707,22 @@ export default function Dashboard() {
                     <YAxis />
                     <Tooltip content={<CustomTooltip labelFormatter={formatDateLabel} />} />
                     <Legend />
-                    <Line type="monotone" dataKey="intakeCalories" stroke="#6366F1" name="摂取カロリー (kcal)" strokeWidth={2} connectNulls={false} />
-                    <Line type="monotone" dataKey="calories" stroke="#F97316" name="消費カロリー (kcal)" strokeWidth={2} connectNulls={false} />
+                    <Line
+                      type="monotone"
+                      dataKey="intakeCalories"
+                      stroke="#6366F1"
+                      name="摂取カロリー (kcal)"
+                      strokeWidth={2}
+                      connectNulls={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="calories"
+                      stroke="#F97316"
+                      name="消費カロリー (kcal)"
+                      strokeWidth={2}
+                      connectNulls={false}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </div>

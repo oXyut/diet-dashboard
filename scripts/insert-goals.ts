@@ -18,7 +18,7 @@ async function insertInitialGoal() {
     daily_carb_min_g: 203.5,
     daily_carb_max_g: 271.4,
     daily_steps_target: 8000,
-    is_active: true
+    is_active: true,
   };
 
   try {
@@ -49,10 +49,7 @@ async function insertInitialGoal() {
       console.log('Goal updated successfully:', data);
     } else {
       console.log('Inserting new goal...');
-      const { data, error } = await supabase
-        .from('goals')
-        .insert([goalData])
-        .select();
+      const { data, error } = await supabase.from('goals').insert([goalData]).select();
 
       if (error) {
         console.error('Error inserting goal:', error);

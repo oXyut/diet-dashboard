@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  calculateIntakeCalories,
-  calculatePFCRatio,
-} from '../calorieCalculator';
+import { calculateIntakeCalories, calculatePFCRatio } from '../calorieCalculator';
 
 describe('calorieCalculator', () => {
   describe('calculateIntakeCalories', () => {

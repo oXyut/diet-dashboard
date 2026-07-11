@@ -57,10 +57,12 @@ ADD COLUMN sodium_mg DECIMAL(7,2);
 ### 2. API更新戦略
 
 **Phase 1: 受け入れのみ（後方互換性維持）**
+
 - 新しいフィールドを受け入れるが、必須ではない
 - 既存のiPhoneショートカットは動作を継続
 
 **Phase 2: 表示対応**
+
 - ダッシュボードに新しいメトリクスを表示
 - nullの場合は「-」を表示
 
@@ -90,16 +92,19 @@ supabase db push --db-url "postgresql://..."
 ### 2. 本番環境へのデプロイ
 
 #### Step 1: データベース更新
+
 1. Supabase Dashboardにログイン
 2. SQL Editorで`001_add_pfc.sql`を実行
 3. 実行結果を確認
 
 #### Step 2: API更新
+
 1. APIコードを更新（新フィールドの受け入れ）
 2. Vercelにデプロイ
 3. テストエンドポイントで動作確認
 
 #### Step 3: フロントエンド更新
+
 1. ダッシュボードコンポーネントを更新
 2. Vercelにデプロイ
 3. 表示を確認

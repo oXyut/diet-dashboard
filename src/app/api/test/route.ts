@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET() {
-  return NextResponse.json({ 
+  return NextResponse.json({
     status: 'ok',
     message: 'API is working',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 }
 
@@ -18,16 +18,19 @@ export async function POST(request: NextRequest) {
     } catch {
       parsedBody = body;
     }
-    
-    return NextResponse.json({ 
+
+    return NextResponse.json({
       status: 'received',
       receivedData: parsedBody,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    return NextResponse.json({ 
-      status: 'error',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        status: 'error',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }

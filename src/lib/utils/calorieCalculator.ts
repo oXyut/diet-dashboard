@@ -1,6 +1,6 @@
 /**
  * PFC（タンパク質、脂質、炭水化物）から摂取カロリーを計算する
- * 
+ *
  * カロリー換算係数:
  * - タンパク質: 1g = 4kcal
  * - 脂質: 1g = 9kcal
@@ -38,7 +38,7 @@ export function calculatePFCRatio(
   carbohydrateG: number | null | undefined
 ): { protein: number; fat: number; carbohydrate: number } | null {
   const totalCalories = calculateIntakeCalories(proteinG, fatG, carbohydrateG);
-  
+
   if (!totalCalories || totalCalories === 0) {
     return null;
   }

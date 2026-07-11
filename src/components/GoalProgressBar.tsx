@@ -20,9 +20,11 @@ export default function GoalProgressBar({ progress }: GoalProgressBarProps) {
             <p className="text-sm text-gray-600">{goal.description}</p>
           </div>
         </div>
-        <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-          isOnTrack ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-        }`}>
+        <div
+          className={`px-3 py-1 rounded-full text-sm font-medium ${
+            isOnTrack ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+          }`}
+        >
           {isOnTrack ? '順調' : '要注意'}
         </div>
       </div>
@@ -46,9 +48,11 @@ export default function GoalProgressBar({ progress }: GoalProgressBarProps) {
                 ) : (
                   <TrendingDown className="w-4 h-4 text-green-500 mr-1" />
                 )}
-                <span className={`text-sm ${
-                  currentWeight > goal.target_weight_kg ? 'text-red-500' : 'text-green-500'
-                }`}>
+                <span
+                  className={`text-sm ${
+                    currentWeight > goal.target_weight_kg ? 'text-red-500' : 'text-green-500'
+                  }`}
+                >
                   {Math.abs(currentWeight - goal.target_weight_kg).toFixed(1)} kg
                 </span>
               </div>
@@ -64,7 +68,7 @@ export default function GoalProgressBar({ progress }: GoalProgressBarProps) {
           <span className="text-sm text-gray-600">{progressPercentage.toFixed(1)}%</span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
-          <div 
+          <div
             className="bg-blue-600 h-2 rounded-full transition-all duration-300"
             style={{ width: `${Math.min(100, progressPercentage)}%` }}
           />
@@ -77,7 +81,6 @@ export default function GoalProgressBar({ progress }: GoalProgressBarProps) {
           <span>全 {totalDays} 日</span>
         </div>
       </div>
-
     </div>
   );
 }

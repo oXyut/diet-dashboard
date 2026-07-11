@@ -1,29 +1,29 @@
-import { HealthData } from '@prisma/client'
-import { supabase, getSupabaseAdmin } from '@/lib/supabase'
-import { IHealthDataRepository, FindManyOptions } from '../interfaces/IHealthDataRepository'
-import { HealthDataInput } from '@/lib/validators/healthDataSchema'
+import { HealthData } from '@prisma/client';
+import { supabase, getSupabaseAdmin } from '@/lib/supabase';
+import { IHealthDataRepository, FindManyOptions } from '../interfaces/IHealthDataRepository';
+import { HealthDataInput } from '@/lib/validators/healthDataSchema';
 
 /**
  * health_dataテーブルの行（Supabase/PostgRESTのレスポンス形式）
  */
 interface SupabaseHealthDataRow {
-  id: string
-  date: string
-  weight: number | null
-  body_fat_percentage: number | null
-  muscle_mass: number | null
-  steps: number | null
-  active_calories: number | null
-  resting_calories: number | null
-  total_calories: number | null
-  protein_g: number | null
-  fat_g: number | null
-  carbohydrate_g: number | null
-  fiber_g: number | null
-  sugar_g: number | null
-  sodium_mg: number | null
-  created_at: string
-  updated_at: string
+  id: string;
+  date: string;
+  weight: number | null;
+  body_fat_percentage: number | null;
+  muscle_mass: number | null;
+  steps: number | null;
+  active_calories: number | null;
+  resting_calories: number | null;
+  total_calories: number | null;
+  protein_g: number | null;
+  fat_g: number | null;
+  carbohydrate_g: number | null;
+  fiber_g: number | null;
+  sugar_g: number | null;
+  sodium_mg: number | null;
+  created_at: string;
+  updated_at: string;
 }
 
 /**
@@ -31,50 +31,50 @@ interface SupabaseHealthDataRow {
  */
 export class SupabaseHealthDataRepository implements IHealthDataRepository {
   async findByDate(date: Date): Promise<HealthData | null> {
-    const dateString = date.toISOString().split('T')[0]
-    
+    const dateString = date.toISOString().split('T')[0];
+
     const { data, error } = await supabase
       .from('health_data')
       .select('*')
       .eq('date', dateString)
-      .single()
+      .single();
 
     if (error) {
-      if (error.code === 'PGRST116') return null // Not found
-      throw new Error(`Supabase error: ${error.message}`)
+      if (error.code === 'PGRST116') return null; // Not found
+      throw new Error(`Supabase error: ${error.message}`);
     }
 
-    return this.mapSupabaseToHealthData(data)
+    return this.mapSupabaseToHealthData(data);
   }
 
   async findMany(options: FindManyOptions = {}): Promise<HealthData[]> {
-    const { take = 100, skip = 0, orderBy = { date: 'desc' } } = options
-    
+    const { take = 100, skip = 0, orderBy = { date: 'desc' } } = options;
+
     let query = supabase
       .from('health_data')
       .select('*')
-      .range(skip, skip + take - 1)
+      .range(skip, skip + take - 1);
 
     // Order by
     if (orderBy.date) {
-      query = query.order('date', { ascending: orderBy.date === 'asc' })
+      query = query.order('date', { ascending: orderBy.date === 'asc' });
     } else if (orderBy.createdAt) {
-      query = query.order('created_at', { ascending: orderBy.createdAt === 'asc' })
+      query = query.order('created_at', { ascending: orderBy.createdAt === 'asc' });
     }
 
-    const { data, error } = await query
+    const { data, error } = await query;
 
     if (error) {
-      throw new Error(`Supabase error: ${error.message}`)
+      throw new Error(`Supabase error: ${error.message}`);
     }
 
-    return data.map(row => this.mapSupabaseToHealthData(row))
+    return data.map((row) => this.mapSupabaseToHealthData(row));
   }
 
   async upsert(data: HealthDataInput & { totalCalories?: number | null }): Promise<HealthData> {
-    const supabaseAdmin = getSupabaseAdmin()
-    const dateObj = new Date(data.date)
-    
+    const supabaseAdmin = getSupabaseAdmin();
+    const dateObj = new Date(data.date);
+
     const processedData = {
       date: dateObj.toISOString().split('T')[0],
       weight: data.weight,
@@ -92,26 +92,26 @@ export class SupabaseHealthDataRepository implements IHealthDataRepository {
       fiber_g: data.fiberG,
       sugar_g: data.sugarG,
       sodium_mg: data.sodiumMg,
-    }
+    };
 
     const { data: result, error } = await supabaseAdmin
       .from('health_data')
       .upsert(processedData, {
-        onConflict: 'date'
+        onConflict: 'date',
       })
       .select()
-      .single()
+      .single();
 
     if (error) {
-      throw new Error(`Supabase error: ${error.message}`)
+      throw new Error(`Supabase error: ${error.message}`);
     }
 
-    return this.mapSupabaseToHealthData(result)
+    return this.mapSupabaseToHealthData(result);
   }
 
   async update(id: string, data: Partial<HealthDataInput>): Promise<HealthData> {
-    const supabaseAdmin = getSupabaseAdmin()
-    
+    const supabaseAdmin = getSupabaseAdmin();
+
     const processedData = {
       weight: data.weight,
       body_fat_percentage: data.bodyFatPercentage,
@@ -127,32 +127,29 @@ export class SupabaseHealthDataRepository implements IHealthDataRepository {
       fiber_g: data.fiberG,
       sugar_g: data.sugarG,
       sodium_mg: data.sodiumMg,
-    }
+    };
 
     const { data: result, error } = await supabaseAdmin
       .from('health_data')
       .update(processedData)
       .eq('id', id)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      throw new Error(`Supabase error: ${error.message}`)
+      throw new Error(`Supabase error: ${error.message}`);
     }
 
-    return this.mapSupabaseToHealthData(result)
+    return this.mapSupabaseToHealthData(result);
   }
 
   async delete(id: string): Promise<void> {
-    const supabaseAdmin = getSupabaseAdmin()
-    
-    const { error } = await supabaseAdmin
-      .from('health_data')
-      .delete()
-      .eq('id', id)
+    const supabaseAdmin = getSupabaseAdmin();
+
+    const { error } = await supabaseAdmin.from('health_data').delete().eq('id', id);
 
     if (error) {
-      throw new Error(`Supabase error: ${error.message}`)
+      throw new Error(`Supabase error: ${error.message}`);
     }
   }
 
@@ -179,7 +176,7 @@ export class SupabaseHealthDataRepository implements IHealthDataRepository {
       sodiumMg: row.sodium_mg,
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
-    }
-    return healthData as HealthData
+    };
+    return healthData as HealthData;
   }
 }

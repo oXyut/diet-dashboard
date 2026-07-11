@@ -1,30 +1,31 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { ZodError } from 'zod'
-import { PrismaHealthDataRepository } from '@/lib/repositories/implementations/PrismaHealthDataRepository'
-import { SupabaseHealthDataRepository } from '@/lib/repositories/implementations/SupabaseHealthDataRepository'
-import { HealthDataService } from '@/lib/services/HealthDataService'
-import { withCors, handleOptions } from '@/lib/middleware/cors'
-import { withAuth } from '@/lib/middleware/auth'
-import { parseRequestBody } from '@/lib/utils/requestParser'
-import { normalizeRequestBody } from '@/lib/utils/dateNormalizer'
+import { NextRequest, NextResponse } from 'next/server';
+import { ZodError } from 'zod';
+import { PrismaHealthDataRepository } from '@/lib/repositories/implementations/PrismaHealthDataRepository';
+import { SupabaseHealthDataRepository } from '@/lib/repositories/implementations/SupabaseHealthDataRepository';
+import { HealthDataService } from '@/lib/services/HealthDataService';
+import { withCors, handleOptions } from '@/lib/middleware/cors';
+import { withAuth } from '@/lib/middleware/auth';
+import { parseRequestBody } from '@/lib/utils/requestParser';
+import { normalizeRequestBody } from '@/lib/utils/dateNormalizer';
 
 // インスタンス作成（依存性注入）
-const repository = process.env.USE_PRISMA === 'true' 
-  ? new PrismaHealthDataRepository()
-  : new SupabaseHealthDataRepository()
-const service = new HealthDataService(repository)
+const repository =
+  process.env.USE_PRISMA === 'true'
+    ? new PrismaHealthDataRepository()
+    : new SupabaseHealthDataRepository();
+const service = new HealthDataService(repository);
 
 export async function OPTIONS() {
-  return handleOptions()
+  return handleOptions();
 }
 
 export const GET = withCors(async () => {
   try {
-    const data = await service.getHealthData({ take: 100 })
-    
+    const data = await service.getHealthData({ take: 100 });
+
     // 既存のフロントエンドとの互換性のためのフォーマット変換
     const formattedData = {
-      data: data.map(row => ({
+      data: data.map((row) => ({
         id: row.id,
         date: row.date.toISOString().split('T')[0],
         weight: row.weight ? Number(row.weight) : null,
@@ -44,83 +45,82 @@ export const GET = withCors(async () => {
         sodiumMg: row.sodiumMg ? Number(row.sodiumMg) : null,
         createdAt: row.createdAt.toISOString(),
         updatedAt: row.updatedAt.toISOString(),
-      }))
-    }
-    
-    return NextResponse.json(formattedData)
+      })),
+    };
+
+    return NextResponse.json(formattedData);
   } catch (error) {
-    console.error('GET /api/health error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch data' },
-      { status: 500 }
-    )
+    console.error('GET /api/health error:', error);
+    return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500 });
   }
-})
+});
 
-export const POST = withCors(withAuth(async (request: NextRequest) => {
-  try {
-    // リクエストボディのパース
-    const rawBody = await parseRequestBody(request)
+export const POST = withCors(
+  withAuth(async (request: NextRequest) => {
+    try {
+      // リクエストボディのパース
+      const rawBody = await parseRequestBody(request);
 
-    // ボディの正規化
-    const normalizedBody = normalizeRequestBody(rawBody)
+      // ボディの正規化
+      const normalizedBody = normalizeRequestBody(rawBody);
 
-    // サービス層でバリデーションとビジネスロジックを処理
-    const result = await service.recordHealthData(normalizedBody)
+      // サービス層でバリデーションとビジネスロジックを処理
+      const result = await service.recordHealthData(normalizedBody);
 
-    // レスポンスフォーマット（既存との互換性維持）
-    const response = {
-      id: result.id,
-      date: result.date.toISOString().split('T')[0],
-      weight: result.weight ? Number(result.weight) : null,
-      bodyFatPercentage: result.bodyFatPercentage ? Number(result.bodyFatPercentage) : null,
-      muscleMass: result.muscleMass ? Number(result.muscleMass) : null,
-      steps: result.steps,
-      activeCalories: result.activeCalories,
-      restingCalories: result.restingCalories,
-      totalCalories: result.totalCalories,
-      // PFC栄養素
-      proteinG: result.proteinG ? Number(result.proteinG) : null,
-      fatG: result.fatG ? Number(result.fatG) : null,
-      carbohydrateG: result.carbohydrateG ? Number(result.carbohydrateG) : null,
-      // その他の栄養素
-      fiberG: result.fiberG ? Number(result.fiberG) : null,
-      sugarG: result.sugarG ? Number(result.sugarG) : null,
-      sodiumMg: result.sodiumMg ? Number(result.sodiumMg) : null,
-      createdAt: result.createdAt.toISOString(),
-      updatedAt: result.updatedAt.toISOString(),
-    }
-    
-    return NextResponse.json(response)
-  } catch (error) {
-    console.error('POST /api/health error:', error)
+      // レスポンスフォーマット（既存との互換性維持）
+      const response = {
+        id: result.id,
+        date: result.date.toISOString().split('T')[0],
+        weight: result.weight ? Number(result.weight) : null,
+        bodyFatPercentage: result.bodyFatPercentage ? Number(result.bodyFatPercentage) : null,
+        muscleMass: result.muscleMass ? Number(result.muscleMass) : null,
+        steps: result.steps,
+        activeCalories: result.activeCalories,
+        restingCalories: result.restingCalories,
+        totalCalories: result.totalCalories,
+        // PFC栄養素
+        proteinG: result.proteinG ? Number(result.proteinG) : null,
+        fatG: result.fatG ? Number(result.fatG) : null,
+        carbohydrateG: result.carbohydrateG ? Number(result.carbohydrateG) : null,
+        // その他の栄養素
+        fiberG: result.fiberG ? Number(result.fiberG) : null,
+        sugarG: result.sugarG ? Number(result.sugarG) : null,
+        sodiumMg: result.sodiumMg ? Number(result.sodiumMg) : null,
+        createdAt: result.createdAt.toISOString(),
+        updatedAt: result.updatedAt.toISOString(),
+      };
 
-    if (error instanceof ZodError) {
+      return NextResponse.json(response);
+    } catch (error) {
+      console.error('POST /api/health error:', error);
+
+      if (error instanceof ZodError) {
+        return NextResponse.json(
+          {
+            error: 'Validation failed',
+            details: error.issues,
+          },
+          { status: 400 }
+        );
+      }
+
+      if (error instanceof Error && error.message.includes('Invalid JSON')) {
+        return NextResponse.json(
+          {
+            error: 'Invalid JSON format',
+            details: error.message,
+          },
+          { status: 400 }
+        );
+      }
+
       return NextResponse.json(
         {
-          error: 'Validation failed',
-          details: error.issues
+          error: 'Failed to save data',
+          details: error instanceof Error ? error.message : 'Unknown error',
         },
-        { status: 400 }
-      )
+        { status: 500 }
+      );
     }
-    
-    if (error instanceof Error && error.message.includes('Invalid JSON')) {
-      return NextResponse.json(
-        {
-          error: 'Invalid JSON format',
-          details: error.message
-        },
-        { status: 400 }
-      )
-    }
-    
-    return NextResponse.json(
-      {
-        error: 'Failed to save data',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    )
-  }
-}))
+  })
+);

@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  # ビルド/テスト用のダミー値（実際のシークレットは Vercel 側で管理）
+  NEXT_PUBLIC_SUPABASE_URL: https://dummy.supabase.co
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy-anon-key
+  SUPABASE_SERVICE_ROLE_KEY: dummy-service-role-key
+  API_SECRET_KEY: dummy-api-secret-key
+  USE_CLEAN_ARCHITECTURE: 'true'
+  USE_PRISMA: 'false'
+  DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
+  DIRECT_URL: postgresql://dummy:dummy@localhost:5432/dummy
+  NEXT_PUBLIC_ASKEN_MEMBER_ID: dummy-member-id
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build

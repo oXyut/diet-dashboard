@@ -68,11 +68,13 @@ USE_CLEAN_ARCHITECTURE=false  # Set to true to enable new architecture
 ### Setup
 
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 2. Generate Prisma client:
+
    ```bash
    npx prisma generate
    ```
@@ -133,12 +135,15 @@ CREATE TABLE health_data (
 ## API Endpoints
 
 ### GET /api/health
+
 Fetch health data (public, no authentication required)
 
-### POST /api/health  
+### POST /api/health
+
 Submit health data (requires X-API-Key header)
 
 ### OPTIONS /api/health
+
 CORS preflight request handling
 
 ## Architecture Migration
@@ -146,16 +151,19 @@ CORS preflight request handling
 The project is gradually migrating from legacy code to clean architecture:
 
 ### Current State: Feature Flag Pattern
+
 - `USE_CLEAN_ARCHITECTURE=false`: Uses legacy Supabase client directly
 - `USE_CLEAN_ARCHITECTURE=true`: Uses Prisma with clean architecture
 
 ### Clean Architecture Benefits
+
 1. **SOLID Principles**: Single responsibility, dependency inversion
 2. **Testability**: Easy to unit test with dependency injection
 3. **Maintainability**: Clear separation of concerns
 4. **Extensibility**: Easy to add new features (e.g., PFC nutrition)
 
 ### Migration Steps
+
 1. ✅ Implement Prisma and repository pattern
 2. ✅ Create service layer with business logic
 3. ✅ Add validation and middleware
@@ -177,6 +185,7 @@ The application is deployed on Vercel with Supabase as the database.
 ### Production Deployment
 
 1. Deploy to Vercel:
+
    ```bash
    vercel --prod
    ```

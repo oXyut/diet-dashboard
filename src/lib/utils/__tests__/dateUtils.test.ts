@@ -97,11 +97,7 @@ describe('dateUtils', () => {
     });
 
     it('getTodayInJSTと常に1日差になる', () => {
-      const times = [
-        '2026-07-11T14:59:59Z',
-        '2026-07-11T15:00:00Z',
-        '2026-01-01T00:00:00Z',
-      ];
+      const times = ['2026-07-11T14:59:59Z', '2026-07-11T15:00:00Z', '2026-01-01T00:00:00Z'];
       for (const t of times) {
         vi.setSystemTime(new Date(t));
         const today = new Date(`${getTodayInJST()}T00:00:00Z`);

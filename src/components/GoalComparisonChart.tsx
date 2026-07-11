@@ -1,5 +1,15 @@
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  ReferenceLine,
+} from 'recharts';
 import { Goal, HealthData } from '@/types/health';
 import { calculateIntakeCalories } from '@/lib/utils/calorieCalculator';
 import { format } from 'date-fns';
@@ -24,15 +34,19 @@ interface ChartTooltipProps {
   label?: string;
 }
 
-export default function GoalComparisonChart({ goal, healthData, dateRange }: GoalComparisonChartProps) {
+export default function GoalComparisonChart({
+  goal,
+  healthData,
+  dateRange,
+}: GoalComparisonChartProps) {
   const processChartData = () => {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - dateRange);
-    
+
     return healthData
-      .filter(item => item.date && new Date(item.date) >= cutoffDate)
+      .filter((item) => item.date && new Date(item.date) >= cutoffDate)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .map(item => ({
+      .map((item) => ({
         date: item.date ? format(new Date(item.date), 'MM/dd', { locale: ja }) : '-',
         actualCalories: calculateIntakeCalories(item.proteinG, item.fatG, item.carbohydrateG),
         actualProtein: item.proteinG,
@@ -61,8 +75,11 @@ export default function GoalComparisonChart({ goal, healthData, dateRange }: Goa
           {payload.map((entry, index) => (
             <p key={index} style={{ color: entry.color }} className="text-sm">
               {entry.name}: {entry.value !== null ? entry.value.toFixed(1) : '-'}
-              {entry.dataKey.includes('Calories') ? 'kcal' : 
-               entry.dataKey.includes('Steps') ? '歩' : 'g'}
+              {entry.dataKey.includes('Calories')
+                ? 'kcal'
+                : entry.dataKey.includes('Steps')
+                  ? '歩'
+                  : 'g'}
             </p>
           ))}
         </div>
@@ -83,16 +100,16 @@ export default function GoalComparisonChart({ goal, healthData, dateRange }: Goa
             <YAxis />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
-            <ReferenceLine 
-              y={goal.daily_calorie_intake_min || 0} 
-              stroke="#10B981" 
-              strokeDasharray="5 5" 
+            <ReferenceLine
+              y={goal.daily_calorie_intake_min || 0}
+              stroke="#10B981"
+              strokeDasharray="5 5"
               label="最小目標"
             />
-            <ReferenceLine 
-              y={goal.daily_calorie_intake_max || 0} 
-              stroke="#EF4444" 
-              strokeDasharray="5 5" 
+            <ReferenceLine
+              y={goal.daily_calorie_intake_max || 0}
+              stroke="#EF4444"
+              strokeDasharray="5 5"
               label="最大目標"
             />
             <Bar dataKey="actualCalories" fill="#3B82F6" name="実際の摂取カロリー" />
@@ -115,7 +132,7 @@ export default function GoalComparisonChart({ goal, healthData, dateRange }: Goa
             <Bar dataKey="actualCarb" fill="#D97706" name="炭水化物 (実際)" />
           </BarChart>
         </ResponsiveContainer>
-        
+
         {/* 目標範囲の表示 */}
         <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
           <div className="text-center p-2 bg-red-50 rounded">
@@ -149,10 +166,10 @@ export default function GoalComparisonChart({ goal, healthData, dateRange }: Goa
             <YAxis />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
-            <ReferenceLine 
-              y={goal.daily_steps_target || 0} 
-              stroke="#10B981" 
-              strokeDasharray="5 5" 
+            <ReferenceLine
+              y={goal.daily_steps_target || 0}
+              stroke="#10B981"
+              strokeDasharray="5 5"
               label="目標歩数"
             />
             <Bar dataKey="actualSteps" fill="#10B981" name="実際の歩数" />
