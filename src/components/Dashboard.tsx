@@ -149,6 +149,29 @@ export default function Dashboard() {
     return chartData;
   };
 
+  // 体重グラフのY軸範囲を実データ・目標線・目標体重をすべて含む範囲から算出する
+  const getWeightAxisDomain = (
+    data: ReturnType<typeof processDataForCharts>
+  ): [number, number] | [string, string] => {
+    const weightValues = data
+      .flatMap(item => [
+        item.weight,
+        'targetWeight' in item ? item.targetWeight : undefined,
+        'linearTarget' in item ? item.linearTarget : undefined,
+      ])
+      .filter((value): value is number => typeof value === 'number');
+
+    if (weightValues.length === 0) {
+      return ['dataMin - 5', 'dataMax + 5'];
+    }
+
+    const margin = 1;
+    return [
+      Math.floor(Math.min(...weightValues) - margin),
+      Math.ceil(Math.max(...weightValues) + margin),
+    ];
+  };
+
   const getLatestMetrics = () => {
     if (healthData.length === 0) return null;
     
@@ -201,6 +224,7 @@ export default function Dashboard() {
   }
 
   const chartData = processDataForCharts();
+  const weightAxisDomain = getWeightAxisDomain(chartData);
   const latestMetrics = getLatestMetrics();
 
   return (
@@ -413,10 +437,7 @@ export default function Dashboard() {
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
-                    <YAxis domain={goalProgress?.goal.target_weight_kg ? [
-                      Math.floor(goalProgress.goal.target_weight_kg * 0.9),
-                      Math.ceil(goalProgress.goal.target_weight_kg * 1.2)
-                    ] : ['dataMin - 5', 'dataMax + 5']} />
+                    <YAxis domain={weightAxisDomain} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
                     <Line type="monotone" dataKey="weight" stroke="#3B82F6" name="実際の体重 (kg)" connectNulls={false} strokeWidth={2} />
@@ -490,10 +511,7 @@ export default function Dashboard() {
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
-                    <YAxis domain={goalProgress?.goal.target_weight_kg ? [
-                      Math.floor(goalProgress.goal.target_weight_kg * 0.9),
-                      Math.ceil(goalProgress.goal.target_weight_kg * 1.2)
-                    ] : ['dataMin - 5', 'dataMax + 5']} />
+                    <YAxis domain={weightAxisDomain} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
                     <Line type="monotone" dataKey="weight" stroke="#3B82F6" name="実際の体重 (kg)" connectNulls={false} strokeWidth={2} />
