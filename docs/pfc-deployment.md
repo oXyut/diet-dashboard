@@ -8,7 +8,7 @@
 
 ### 1. データベースマイグレーション
 
-Supabaseデータベースに以下のSQLを実行してください：
+CockroachDB では、初期マイグレーションに PFC カラムが含まれています。既存環境へ追加する場合だけ、次の SQL を CockroachDB の SQL Console で実行してください：
 
 ```sql
 -- Add PFC nutrition fields to health_data table
@@ -23,8 +23,8 @@ ADD COLUMN IF NOT EXISTS "sodium_mg" DECIMAL(7, 2);
 
 実行方法：
 
-1. Supabaseダッシュボードにログイン
-2. SQL Editorを開く
+1. CockroachDB Cloud Console にログイン
+2. SQL Consoleを開く
 3. 上記のSQLを貼り付けて実行
 
 ### 2. コードのデプロイ

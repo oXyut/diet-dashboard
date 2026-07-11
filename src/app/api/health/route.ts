@@ -1,18 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ZodError } from 'zod';
 import { PrismaHealthDataRepository } from '@/lib/repositories/implementations/PrismaHealthDataRepository';
-import { SupabaseHealthDataRepository } from '@/lib/repositories/implementations/SupabaseHealthDataRepository';
 import { HealthDataService } from '@/lib/services/HealthDataService';
 import { withCors, handleOptions } from '@/lib/middleware/cors';
 import { withAuth } from '@/lib/middleware/auth';
 import { parseRequestBody } from '@/lib/utils/requestParser';
 import { normalizeRequestBody } from '@/lib/utils/dateNormalizer';
 
-// インスタンス作成（依存性注入）
-const repository =
-  process.env.USE_PRISMA === 'true'
-    ? new PrismaHealthDataRepository()
-    : new SupabaseHealthDataRepository();
+// CockroachDB へのアクセスは Prisma に統一する。
+const repository = new PrismaHealthDataRepository();
 const service = new HealthDataService(repository);
 
 export async function OPTIONS() {

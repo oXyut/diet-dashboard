@@ -537,7 +537,7 @@ export default function Dashboard() {
               <div className="bg-white p-6 rounded-lg shadow text-center">
                 <p className="text-gray-500 mb-4">目標データが設定されていません</p>
                 <p className="text-sm text-gray-400">
-                  Supabaseにgoalsテーブルを作成し、目標データを挿入してください
+                  CockroachDBにgoalsテーブルを作成し、目標データを登録してください
                 </p>
               </div>
             )}

@@ -39,7 +39,7 @@ export interface WeightTrend {
 }
 
 export interface Goal {
-  id: number;
+  id: string;
   name: string;
   description?: string | null;
   target_weight_kg?: number | null;

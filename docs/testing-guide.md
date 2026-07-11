@@ -146,7 +146,7 @@ npx prisma generate
 **対処法**:
 
 - .envファイルのDATABASE_URLを確認
-- Supabaseの接続状況を確認
+- CockroachDB の接続状況を確認
 
 ### 3. バリデーションエラー
 

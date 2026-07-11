@@ -1,8 +1,4 @@
 {
-  "env": {
-    "USE_CLEAN_ARCHITECTURE": "true",
-    "USE_PRISMA": "false"
-  },
   "functions": {
     "app/api/**/*.ts": {
       "maxDuration": 10

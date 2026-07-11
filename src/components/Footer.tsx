@@ -23,7 +23,7 @@ const updates = [
   },
   {
     date: '2025-07-25',
-    title: 'Supabaseデータベース連携',
+    title: 'CockroachDBデータベース連携',
     description: 'クラウドデータベースによる永続化とAPI認証機能',
   },
 ];
