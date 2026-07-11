@@ -59,23 +59,15 @@ export const GET = withCors(async () => {
 
 export const POST = withCors(withAuth(async (request: NextRequest) => {
   try {
-    console.log('=== API Health POST Request (Clean Architecture) ===')
-    console.log('Repository type:', process.env.USE_PRISMA === 'true' ? 'Prisma' : 'Supabase')
-    
     // リクエストボディのパース
     const rawBody = await parseRequestBody(request)
-    console.log('Raw body:', JSON.stringify(rawBody, null, 2))
-    
+
     // ボディの正規化
     const normalizedBody = normalizeRequestBody(rawBody)
-    console.log('Normalized body:', JSON.stringify(normalizedBody, null, 2))
-    
+
     // サービス層でバリデーションとビジネスロジックを処理
     const result = await service.recordHealthData(normalizedBody)
-    
-    console.log('Data saved successfully')
-    console.log('==============================\n')
-    
+
     // レスポンスフォーマット（既存との互換性維持）
     const response = {
       id: result.id,
@@ -101,10 +93,8 @@ export const POST = withCors(withAuth(async (request: NextRequest) => {
     
     return NextResponse.json(response)
   } catch (error) {
-    console.error('=== API Health POST Error (Clean Architecture) ===')
-    console.error('Error:', error)
-    console.error('==============================\n')
-    
+    console.error('POST /api/health error:', error)
+
     if (error instanceof ZodError) {
       return NextResponse.json(
         {

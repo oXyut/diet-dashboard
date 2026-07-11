@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { format, subDays, parseISO } from 'date-fns';
+import { format, subDays, parseISO, differenceInDays } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { TrendingDown, TrendingUp, Activity, Flame, Weight, Percent, Beef, Wheat, Sandwich, Calculator, Info, Target, Calendar } from 'lucide-react';
 import { HealthData, DailyHealthMetrics, Goal, GoalProgress } from '@/types/health';
@@ -44,25 +44,15 @@ export default function Dashboard() {
 
   const fetchGoals = async () => {
     try {
-      console.log('🎯 Fetching goals from API...');
       const response = await fetch('/api/goals?active=true');
-      console.log('📡 Goals API response status:', response.status);
       const data = await response.json();
-      console.log('📊 Goals API data:', data);
       const goalsData = data.data || [];
-      console.log('🎯 Processed goals data:', goalsData);
       setGoals(goalsData);
-      
+
       // 目標進捗の計算はuseEffectで行うため、ここではスキップ
       // fetchGoalsが呼ばれる時点ではhealthDataが古い可能性があるため
     } catch (error) {
-      console.error('❌ Failed to fetch goals:', error);
-      if (error instanceof Error) {
-        console.error('❌ Error details:', {
-          message: error.message,
-          stack: error.stack
-        });
-      }
+      console.error('Failed to fetch goals:', error);
     }
   };
 
@@ -83,19 +73,7 @@ export default function Dashboard() {
       // 目標データの妥当性確認
       if (activeGoal && activeGoal.start_date && activeGoal.end_date) {
         try {
-          console.log('🎯 useEffect - Before calculation:', {
-            yesterdayStr,
-            targetHealthDataDate: targetHealthData.date,
-            targetHealthDataCarb: targetHealthData.carbohydrateG,
-            allHealthDates: healthData.map(d => ({ date: d.date, carb: d.carbohydrateG }))
-          });
-          
           const progress = calculateGoalProgress(activeGoal, targetHealthData);
-          console.log('🎯 useEffect - Calculated progress:', {
-            targetHealthData: targetHealthData.date,
-            carb: targetHealthData.carbohydrateG,
-            carbAchievement: progress.dailyAchievements.carbohydrate
-          });
           setGoalProgress(progress);
         } catch (error) {
           console.error('Failed to calculate goal progress:', error);
@@ -111,8 +89,9 @@ export default function Dashboard() {
       .filter(item => item.date && new Date(item.date) >= cutoffDate)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
+    // 日付キーはYYYY-MM-DD形式で保持し、表示時のみMM/ddにフォーマットする
     const chartData = filteredData.map(item => ({
-      date: item.date ? format(new Date(item.date), 'MM/dd', { locale: ja }) : '-',
+      date: item.date,
       weight: item.weight,
       bodyFat: item.bodyFatPercentage,
       muscleMass: item.muscleMass,
@@ -149,6 +128,38 @@ export default function Dashboard() {
     return chartData;
   };
 
+  // YYYY-MM-DD形式の日付キーをグラフ表示用のMM/dd形式にフォーマットする
+  const formatDateLabel = (dateStr: string) => {
+    try {
+      return format(parseISO(dateStr), 'MM/dd', { locale: ja });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  // 体重グラフのY軸範囲を実データ・目標線・目標体重をすべて含む範囲から算出する
+  const getWeightAxisDomain = (
+    data: ReturnType<typeof processDataForCharts>
+  ): [number, number] | [string, string] => {
+    const weightValues = data
+      .flatMap(item => [
+        item.weight,
+        'targetWeight' in item ? item.targetWeight : undefined,
+        'linearTarget' in item ? item.linearTarget : undefined,
+      ])
+      .filter((value): value is number => typeof value === 'number');
+
+    if (weightValues.length === 0) {
+      return ['dataMin - 5', 'dataMax + 5'];
+    }
+
+    const margin = 1;
+    return [
+      Math.floor(Math.min(...weightValues) - margin),
+      Math.ceil(Math.max(...weightValues) + margin),
+    ];
+  };
+
   const getLatestMetrics = () => {
     if (healthData.length === 0) return null;
     
@@ -163,15 +174,17 @@ export default function Dashboard() {
       targetData = healthData[0];
     }
     
-    console.log('🍽️ getLatestMetrics - Yesterday:', yesterdayStr);
-    console.log('🍽️ getLatestMetrics - Target data:', targetData);
-    
     // 前日のデータを取得（体重変化計算用）
+    // 配列の隣接要素ではなく、実際の日付差が1日であることを確認する
+    // （欠損日がある場合は数日分の差になってしまうため、前日比は表示しない）
     const targetIndex = healthData.findIndex(data => data.id === targetData.id);
     const previous = healthData[targetIndex + 1];
-    
-    const weightChange = targetData.weight && previous?.weight 
-      ? targetData.weight - previous.weight 
+    const isPreviousDay = previous?.date && targetData.date
+      ? differenceInDays(parseISO(targetData.date), parseISO(previous.date)) === 1
+      : false;
+
+    const weightChange = isPreviousDay && targetData.weight && previous?.weight
+      ? targetData.weight - previous.weight
       : 0;
     
     return {
@@ -201,6 +214,7 @@ export default function Dashboard() {
   }
 
   const chartData = processDataForCharts();
+  const weightAxisDomain = getWeightAxisDomain(chartData);
   const latestMetrics = getLatestMetrics();
 
   return (
@@ -289,9 +303,6 @@ export default function Dashboard() {
                     </a>
                     でご確認いただけます。
                   </p>
-                  {process.env.NEXT_PUBLIC_ASKEN_MEMBER_ID && (
-                    <p className="mt-1 text-xs">会員ID: {process.env.NEXT_PUBLIC_ASKEN_MEMBER_ID}</p>
-                  )}
                 </div>
               </div>
             </div>
@@ -380,17 +391,7 @@ export default function Dashboard() {
               value={latestMetrics.carbohydrate}
               unit="g"
               icon={<Wheat className="w-8 h-8 text-amber-600" />}
-              achievement={(() => {
-                const achievement = goalProgress?.dailyAchievements.carbohydrate;
-                console.log('🌾 Dashboard render - Carbohydrate achievement:', {
-                  latestMetricsCarb: latestMetrics.carbohydrate,
-                  latestMetricsDate: latestMetrics.date,
-                  goalProgressCarb: goalProgress?.dailyAchievements.carbohydrate,
-                  goalProgressCurrentWeight: goalProgress?.currentWeight,
-                  fullGoalProgress: goalProgress
-                });
-                return achievement;
-              })()}
+              achievement={goalProgress?.dailyAchievements.carbohydrate}
               targetMin={goalProgress?.goal.daily_carb_min_g}
               targetMax={goalProgress?.goal.daily_carb_max_g}
             />
@@ -412,12 +413,9 @@ export default function Dashboard() {
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis domain={goalProgress?.goal.target_weight_kg ? [
-                      Math.floor(goalProgress.goal.target_weight_kg * 0.9),
-                      Math.ceil(goalProgress.goal.target_weight_kg * 1.2)
-                    ] : ['dataMin - 5', 'dataMax + 5']} />
-                    <Tooltip content={<CustomTooltip />} />
+                    <XAxis dataKey="date" tickFormatter={formatDateLabel} />
+                    <YAxis domain={weightAxisDomain} />
+                    <Tooltip content={<CustomTooltip labelFormatter={formatDateLabel} />} />
                     <Legend />
                     <Line type="monotone" dataKey="weight" stroke="#3B82F6" name="実際の体重 (kg)" connectNulls={false} strokeWidth={2} />
                     {goalProgress && (
@@ -435,9 +433,9 @@ export default function Dashboard() {
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
+                    <XAxis dataKey="date" tickFormatter={formatDateLabel} />
                     <YAxis />
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip content={<CustomTooltip labelFormatter={formatDateLabel} />} />
                     <Legend />
                     <Line type="monotone" dataKey="intakeCalories" stroke="#6366F1" name="摂取カロリー (kcal)" strokeWidth={2} connectNulls={false} />
                     <Line type="monotone" dataKey="calories" stroke="#F97316" name="消費カロリー (kcal)" strokeWidth={2} connectNulls={false} />
@@ -489,12 +487,9 @@ export default function Dashboard() {
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis domain={goalProgress?.goal.target_weight_kg ? [
-                      Math.floor(goalProgress.goal.target_weight_kg * 0.9),
-                      Math.ceil(goalProgress.goal.target_weight_kg * 1.2)
-                    ] : ['dataMin - 5', 'dataMax + 5']} />
-                    <Tooltip content={<CustomTooltip />} />
+                    <XAxis dataKey="date" tickFormatter={formatDateLabel} />
+                    <YAxis domain={weightAxisDomain} />
+                    <Tooltip content={<CustomTooltip labelFormatter={formatDateLabel} />} />
                     <Legend />
                     <Line type="monotone" dataKey="weight" stroke="#3B82F6" name="実際の体重 (kg)" connectNulls={false} strokeWidth={2} />
                     {goalProgress && (
@@ -512,9 +507,9 @@ export default function Dashboard() {
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
+                    <XAxis dataKey="date" tickFormatter={formatDateLabel} />
                     <YAxis />
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip content={<CustomTooltip labelFormatter={formatDateLabel} />} />
                     <Legend />
                     <Line type="monotone" dataKey="bodyFat" stroke="#8B5CF6" name="体脂肪率 (%)" connectNulls={false} />
                     <Line type="monotone" dataKey="muscleMass" stroke="#10B981" name="筋肉量 (kg)" connectNulls={false} />
@@ -527,9 +522,9 @@ export default function Dashboard() {
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
+                    <XAxis dataKey="date" tickFormatter={formatDateLabel} />
                     <YAxis />
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip content={<CustomTooltip labelFormatter={formatDateLabel} />} />
                     <Legend />
                     <Bar dataKey="steps" fill="#10B981" name="歩数" />
                   </BarChart>
@@ -541,9 +536,9 @@ export default function Dashboard() {
                 <ResponsiveContainer width="100%" height={300}>
                   <AreaChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
+                    <XAxis dataKey="date" tickFormatter={formatDateLabel} />
                     <YAxis />
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip content={<CustomTooltip labelFormatter={formatDateLabel} />} />
                     <Legend />
                     <Area type="monotone" dataKey="calories" stroke="#F97316" fill="#F97316" fillOpacity={0.6} name="消費カロリー (kcal)" connectNulls={false} />
                   </AreaChart>
@@ -555,9 +550,9 @@ export default function Dashboard() {
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
+                    <XAxis dataKey="date" tickFormatter={formatDateLabel} />
                     <YAxis />
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip content={<CustomTooltip labelFormatter={formatDateLabel} />} />
                     <Legend />
                     <Line type="monotone" dataKey="protein" stroke="#EF4444" name="タンパク質 (g)" connectNulls={false} />
                     <Line type="monotone" dataKey="fat" stroke="#F59E0B" name="脂質 (g)" connectNulls={false} />
@@ -571,9 +566,9 @@ export default function Dashboard() {
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
+                    <XAxis dataKey="date" tickFormatter={formatDateLabel} />
                     <YAxis />
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip content={<CustomTooltip labelFormatter={formatDateLabel} />} />
                     <Legend />
                     <Line type="monotone" dataKey="intakeCalories" stroke="#6366F1" name="摂取カロリー (kcal)" strokeWidth={2} connectNulls={false} />
                     <Line type="monotone" dataKey="calories" stroke="#F97316" name="消費カロリー (kcal)" strokeWidth={2} connectNulls={false} />

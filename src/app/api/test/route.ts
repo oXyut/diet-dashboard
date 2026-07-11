@@ -11,9 +11,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.text();
-    console.log('=== Test API POST ===');
-    console.log('Raw body:', body);
-    
+
     let parsedBody;
     try {
       parsedBody = JSON.parse(body);

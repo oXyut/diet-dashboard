@@ -1,6 +1,7 @@
 import { Goal, GoalProgress, HealthData } from '@/types/health';
 import { calculateIntakeCalories } from './calorieCalculator';
-import { differenceInDays, parseISO, isAfter, isBefore } from 'date-fns';
+import { getTodayInJST } from './dateUtils';
+import { differenceInDays, parseISO } from 'date-fns';
 
 /**
  * 目標達成状況を計算する
@@ -9,7 +10,8 @@ export function calculateGoalProgress(
   goal: Goal,
   latestHealthData?: HealthData | null
 ): GoalProgress {
-  const today = new Date();
+  // 実行環境のタイムゾーンに依存しないよう、日本時間の「今日」を基準にする
+  const today = parseISO(getTodayInJST());
   
   // 日付文字列の安全な処理
   if (!goal.start_date || !goal.end_date) {
@@ -75,20 +77,6 @@ function evaluateDailyAchievements(
     healthData.carbohydrateG
   );
   
-  // デバッグ：炭水化物の評価
-  const carbResult = evaluateRange(
-    healthData.carbohydrateG,
-    goal.daily_carb_min_g,
-    goal.daily_carb_max_g
-  );
-  
-  console.log('🥖 evaluateDailyAchievements - Carbohydrate:', {
-    value: healthData.carbohydrateG,
-    min: goal.daily_carb_min_g,
-    max: goal.daily_carb_max_g,
-    result: carbResult
-  });
-
   return {
     calories: evaluateRange(
       intakeCalories,
@@ -105,7 +93,11 @@ function evaluateDailyAchievements(
       goal.daily_fat_min_g,
       goal.daily_fat_max_g
     ),
-    carbohydrate: carbResult,
+    carbohydrate: evaluateRange(
+      healthData.carbohydrateG,
+      goal.daily_carb_min_g,
+      goal.daily_carb_max_g
+    ),
     steps: evaluateSteps(healthData.steps, goal.daily_steps_target),
   };
 }

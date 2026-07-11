@@ -4,13 +4,16 @@ interface CustomTooltipProps {
   active?: boolean;
   payload?: any[];
   label?: string;
+  labelFormatter?: (label: string) => string;
 }
 
-export const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
+export const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label, labelFormatter }) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white p-3 border border-gray-200 rounded shadow-md">
-        <p className="text-sm font-medium text-gray-900 mb-1">{label}</p>
+        <p className="text-sm font-medium text-gray-900 mb-1">
+          {label !== undefined && labelFormatter ? labelFormatter(label) : label}
+        </p>
         {payload.map((entry, index) => {
           const value = entry.value;
           const displayValue = value !== null && value !== undefined 
