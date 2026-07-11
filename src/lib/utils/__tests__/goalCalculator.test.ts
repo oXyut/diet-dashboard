@@ -48,8 +48,8 @@ describe('goalCalculator', () => {
 
       // 1/1〜1/31 は両端含めて31日
       expect(result.totalDays).toBe(31);
-      // 1/10 時点の残りは 1/11〜1/31 相当の20日
-      expect(result.daysRemaining).toBe(20);
+      // 1/10 時点の残りは 1/11〜1/31 の21日
+      expect(result.daysRemaining).toBe(21);
       // 経過10日 / 31日 = 32.3%
       expect(result.progressPercentage).toBe(32.3);
     });
@@ -59,7 +59,7 @@ describe('goalCalculator', () => {
       const result = calculateGoalProgress(makeGoal());
 
       expect(result.totalDays).toBe(31);
-      expect(result.daysRemaining).toBe(29);
+      expect(result.daysRemaining).toBe(30);
       // 経過1日 / 31日 = 3.2%
       expect(result.progressPercentage).toBe(3.2);
     });

@@ -123,15 +123,15 @@ describe('weightGoalCalculator', () => {
       expect(result).toHaveLength(6);
     });
 
-    it('日付キーは MM/dd 形式で返す（現状の実装仕様）', () => {
+    it('日付キーは年情報を含む yyyy-MM-dd 形式で返す', () => {
       vi.setSystemTime(new Date('2026-01-20T00:00:00Z'));
       const result = calculateLinearWeightGoal(makeGoal(), [
         makeHealthData('2026-01-01', 80),
       ]);
-      expect(result[0].date).toBe('01/01');
-      expect(result[result.length - 1].date).toBe('01/20');
+      expect(result[0].date).toBe('2026-01-01');
+      expect(result[result.length - 1].date).toBe('2026-01-20');
       for (const row of result) {
-        expect(row.date).toMatch(/^\d{2}\/\d{2}$/);
+        expect(row.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       }
     });
   });
@@ -148,7 +148,7 @@ describe('weightGoalCalculator', () => {
 
       expect(result.length).toBeGreaterThan(0);
       // 初日（1/1）の目標線は逆算された開始体重 81kg
-      expect(result[0].date).toBe('01/01');
+      expect(result[0].date).toBe('2026-01-01');
       expect(result[0].linearTarget).toBeCloseTo(81, 5);
     });
 
@@ -171,13 +171,11 @@ describe('weightGoalCalculator', () => {
       expect(result[0].linearTarget).toBeCloseTo(80, 5);
     });
 
-    it('体重データが空の場合はデフォルト推定値（目標+15kg）で目標線を生成する（現状の実装仕様）', () => {
+    it('体重データが空の場合は開始体重を推定できないため目標線を描画しない', () => {
       vi.setSystemTime(new Date('2026-01-20T00:00:00Z'));
       const result = calculateLinearWeightGoal(makeGoal(), []);
 
-      // 現状の実装では空配列を返さず、target + 15kg を開始体重として線を引く
-      expect(result.length).toBeGreaterThan(0);
-      expect(result[0].linearTarget).toBeCloseTo(85, 5);
+      expect(result).toEqual([]);
     });
   });
 });
