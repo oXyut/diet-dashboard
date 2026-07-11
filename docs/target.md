@@ -1,3 +1,9 @@
+> **注記: 目標値の source of truth はDBの `goals` テーブルです。**
+> 目標値を変更する場合は `scripts/insert-goals.ts` で新しい目標を登録してください。
+> このドキュメントに記載されている値は参考値であり、実際にアプリが参照するのはDBの値です。
+>
+> <!-- 重複に関する注意: 同じ目標値が scripts/insert-goals.ts と prisma/migrations/create_goals_table.sql にもハードコードされています。値を変更する際はDBへの登録(insert-goals.ts)を正とし、これらのファイルとの不整合に注意してください。 -->
+
 ## 最終的な目標
 - 目標体重：100kg
 - 期限：2025/7/26 ~ 2025/9/30
