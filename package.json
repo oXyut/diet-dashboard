@@ -2,6 +2,11 @@
   "name": "diet-dashboard",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "npm@11.6.1",
+  "engines": {
+    "node": "22.x",
+    "npm": "11.x"
+  },
   "scripts": {
     "dev": "node get-local-ip.js && next dev",
     "build": "prisma generate && next build",
