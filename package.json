@@ -12,6 +12,7 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "db:migrate": "prisma migrate deploy",
+    "mobile:pair": "node scripts/create-mobile-pairing-code.js",
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",

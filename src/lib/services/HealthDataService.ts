@@ -27,7 +27,8 @@ export class HealthDataService {
     // 永続化
     return this.repository.upsert({
       ...validatedData,
-      totalCalories,
+      // HealthKit 側でカロリー項目を許可していない場合、既存の手入力値を消さない。
+      ...(totalCalories === undefined ? {} : { totalCalories }),
     });
   }
 
@@ -40,8 +41,12 @@ export class HealthDataService {
     return this.repository.delete(id);
   }
 
-  private calculateTotalCalories(data: HealthDataInput): number | null {
+  private calculateTotalCalories(data: HealthDataInput): number | null | undefined {
     const { activeCalories, restingCalories } = data;
+
+    if (activeCalories === undefined && restingCalories === undefined) {
+      return undefined;
+    }
 
     if (
       activeCalories !== null &&

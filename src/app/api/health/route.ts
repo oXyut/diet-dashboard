@@ -3,7 +3,7 @@ import { ZodError } from 'zod';
 import { PrismaHealthDataRepository } from '@/lib/repositories/implementations/PrismaHealthDataRepository';
 import { HealthDataService } from '@/lib/services/HealthDataService';
 import { withCors, handleOptions } from '@/lib/middleware/cors';
-import { withAuth } from '@/lib/middleware/auth';
+import { withHealthWriteAuth } from '@/lib/middleware/auth';
 import { parseRequestBody } from '@/lib/utils/requestParser';
 import { normalizeRequestBody } from '@/lib/utils/dateNormalizer';
 
@@ -52,7 +52,7 @@ export const GET = withCors(async () => {
 });
 
 export const POST = withCors(
-  withAuth(async (request: NextRequest) => {
+  withHealthWriteAuth(async (request: NextRequest) => {
     try {
       // リクエストボディのパース
       const rawBody = await parseRequestBody(request);
