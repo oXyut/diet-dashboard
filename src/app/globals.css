@@ -1,3 +1,36 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  /* サーフェス階調 */
+  --bg: #0b0d10;
+  --surface: #15181d;
+  --surface-2: #1c2128;
+  --border: #262b33;
+  /* テキスト階調 */
+  --text-primary: #f2f4f7;
+  --text-secondary: #b0b7c3;
+  --text-muted: #6c7683;
+  /* アクセント・ステータス */
+  --accent: #3987e5;
+  --status-good: #0ca30c;
+  --status-warn: #fab219;
+  --status-bad: #ec835a;
+  --status-none: #6c7683;
+  /* チャート系列(ダーク面 #15181d でコントラスト検証済み) */
+  --chart-weight: #3987e5;
+  --chart-intake: #9085e9;
+  --chart-burn: #d95926;
+  --chart-protein: #e66767;
+  --chart-fat: #c98500;
+  --chart-carb: #199e70;
+  --chart-target: #6c7683;
+  --chart-grid: #232830;
+  --chart-axis: #6c7683;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+}
