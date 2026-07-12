@@ -18,15 +18,14 @@
 
 ### デバッグ手順
 
-1. **テストエンドポイントで確認**
-   - URL: `https://your-app.vercel.app/api/test`
-   - メソッド: POST
-   - ヘッダー: Content-Type: application/json
-   - 本文: {"test": "data"}
+1. **認証付きで API を確認**（`/api/test` は廃止済み）
+   - URL: `https://your-app.vercel.app/api/health`
+   - メソッド: GET
+   - ヘッダー: X-API-Key: [API_SECRET_KEY]
 
 2. **レスポンスを確認**
-   - 成功: `{"status": "received", ...}`
-   - 失敗: エラーメッセージを確認
+   - 成功: `{"data": [...]}`
+   - 401: API キーの設定ミスを確認
 
 ### ショートカットの正しい設定
 

@@ -1,34 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ZodError } from 'zod';
-import { Goal } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { withAuth } from '@/lib/middleware/auth';
+import { formatGoal } from '@/lib/formatters';
 import { goalSchema } from '@/lib/validators/goalSchema';
 
-function formatGoal(goal: Goal) {
-  return {
-    id: goal.id,
-    name: goal.name,
-    description: goal.description,
-    target_weight_kg: goal.targetWeightKg ? Number(goal.targetWeightKg) : null,
-    start_date: goal.startDate.toISOString().slice(0, 10),
-    end_date: goal.endDate.toISOString().slice(0, 10),
-    daily_calorie_intake_min: goal.dailyCalorieIntakeMin,
-    daily_calorie_intake_max: goal.dailyCalorieIntakeMax,
-    daily_protein_min_g: goal.dailyProteinMinG ? Number(goal.dailyProteinMinG) : null,
-    daily_protein_max_g: goal.dailyProteinMaxG ? Number(goal.dailyProteinMaxG) : null,
-    daily_fat_min_g: goal.dailyFatMinG ? Number(goal.dailyFatMinG) : null,
-    daily_fat_max_g: goal.dailyFatMaxG ? Number(goal.dailyFatMaxG) : null,
-    daily_carb_min_g: goal.dailyCarbMinG ? Number(goal.dailyCarbMinG) : null,
-    daily_carb_max_g: goal.dailyCarbMaxG ? Number(goal.dailyCarbMaxG) : null,
-    daily_steps_target: goal.dailyStepsTarget,
-    is_active: goal.isActive,
-    created_at: goal.createdAt.toISOString(),
-    updated_at: goal.updatedAt.toISOString(),
-  };
-}
-
-export async function GET(request: NextRequest) {
+// 目標データの読み取りもAPIキー必須。
+// ダッシュボードはサーバーコンポーネントで直接取得する(src/lib/dashboardData.ts)。
+export const GET = withAuth(async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     const active = searchParams.get('active');
@@ -46,7 +25,7 @@ export async function GET(request: NextRequest) {
     console.error('API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
 export const POST = withAuth(async (request: NextRequest) => {
   try {

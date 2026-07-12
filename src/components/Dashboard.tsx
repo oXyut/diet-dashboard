@@ -42,46 +42,15 @@ import { MetricsCard } from './MetricsCard';
 import GoalComparisonChart from './GoalComparisonChart';
 import Footer from './Footer';
 
-export default function Dashboard() {
-  const [healthData, setHealthData] = useState<HealthData[]>([]);
-  const [goals, setGoals] = useState<Goal[]>([]);
+interface DashboardProps {
+  healthData: HealthData[];
+  goals: Goal[];
+}
+
+export default function Dashboard({ healthData, goals }: DashboardProps) {
   const [goalProgress, setGoalProgress] = useState<GoalProgress | null>(null);
-  const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState(30);
   const [activeTab, setActiveTab] = useState<'overview' | 'goals' | 'charts'>('overview');
-
-  useEffect(() => {
-    // goalProgressを一旦リセット
-    setGoalProgress(null);
-    fetchHealthData();
-    fetchGoals();
-  }, []);
-
-  const fetchHealthData = async () => {
-    try {
-      const response = await fetch('/api/health');
-      const data = await response.json();
-      setHealthData(data.data || []);
-    } catch (error) {
-      console.error('Failed to fetch health data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchGoals = async () => {
-    try {
-      const response = await fetch('/api/goals?active=true');
-      const data = await response.json();
-      const goalsData = data.data || [];
-      setGoals(goalsData);
-
-      // 目標進捗の計算はuseEffectで行うため、ここではスキップ
-      // fetchGoalsが呼ばれる時点ではhealthDataが古い可能性があるため
-    } catch (error) {
-      console.error('Failed to fetch goals:', error);
-    }
-  };
 
   // 目標進捗の再計算（健康データが更新されたとき）
   useEffect(() => {
@@ -243,14 +212,6 @@ export default function Dashboard() {
       pfcRatio: calculatePFCRatio(targetData.proteinG, targetData.fatG, targetData.carbohydrateG),
     };
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">読み込み中...</div>
-      </div>
-    );
-  }
 
   const chartData = processDataForCharts();
   const weightAxisDomain = getWeightAxisDomain(chartData);

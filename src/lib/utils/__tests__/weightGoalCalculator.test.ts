@@ -4,7 +4,7 @@ import { Goal, HealthData } from '@/types/health';
 
 function makeGoal(overrides: Partial<Goal> = {}): Goal {
   return {
-    id: 1,
+    id: 'goal-1',
     name: 'テスト目標',
     target_weight_kg: 70,
     start_date: '2026-01-01',
