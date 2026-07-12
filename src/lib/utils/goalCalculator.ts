@@ -109,7 +109,7 @@ function evaluateDailyAchievements(
 /**
  * 範囲内かどうかを評価する
  */
-function evaluateRange(
+export function evaluateRange(
   value: number | null | undefined,
   min: number | null | undefined,
   max: number | null | undefined
@@ -125,7 +125,7 @@ function evaluateRange(
 /**
  * 歩数の達成状況を評価する
  */
-function evaluateSteps(
+export function evaluateSteps(
   steps: number | null | undefined,
   target: number | null | undefined
 ): StepsAchievement {

@@ -2,28 +2,22 @@ import { Goal, HealthData } from '@/types/health';
 import { parseISO, differenceInDays, subDays, format } from 'date-fns';
 
 /**
- * 線形減少の目標線データを計算する
+ * 目標開始時点の体重を推定する（最も古いデータを使用、または現在の減量ペースから逆算）
+ * 体重データがない場合は推定できないため null を返す
  */
-export function calculateLinearWeightGoal(
-  goal: Goal,
-  healthData: HealthData[],
-  dateRange: number = 30
-): Array<{ date: string; targetWeight: number; linearTarget: number }> {
-  if (!goal.target_weight_kg || !goal.start_date || !goal.end_date) {
-    return [];
+export function estimateStartWeight(goal: Goal, healthData: HealthData[]): number | null {
+  if (!goal.start_date) {
+    return null;
   }
 
   const startDate = parseISO(goal.start_date);
-  const endDate = parseISO(goal.end_date);
 
-  // 開始時の体重を推定（最も古いデータを使用、または現在のデータから推定）
   const sortedHealthData = [...healthData]
     .filter((d) => d.weight !== null && d.weight !== undefined)
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  // 体重データがない場合は開始体重を推定できないため、目標線を描画しない
   if (sortedHealthData.length === 0) {
-    return [];
+    return null;
   }
 
   // 最古のデータを開始時の体重として使用
@@ -40,6 +34,29 @@ export function calculateLinearWeightGoal(
       const daysFromStartToOldest = differenceInDays(oldestDate, startDate);
       startWeight = oldestData.weight! + weightLossRate * daysFromStartToOldest;
     }
+  }
+
+  return startWeight;
+}
+
+/**
+ * 線形減少の目標線データを計算する
+ */
+export function calculateLinearWeightGoal(
+  goal: Goal,
+  healthData: HealthData[],
+  dateRange: number = 30
+): Array<{ date: string; targetWeight: number; linearTarget: number }> {
+  if (!goal.target_weight_kg || !goal.start_date || !goal.end_date) {
+    return [];
+  }
+
+  const startDate = parseISO(goal.start_date);
+  const endDate = parseISO(goal.end_date);
+
+  const startWeight = estimateStartWeight(goal, healthData);
+  if (startWeight === null) {
+    return [];
   }
 
   const totalDays = differenceInDays(endDate, startDate);
