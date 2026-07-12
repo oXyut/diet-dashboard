@@ -3,9 +3,11 @@
 <plist version="1.0">
 <dict>
     <key>API_BASE_URL</key>
-    <string>https://YOUR-VERCEL-PROJECT.vercel.app</string>
+    <string>https://diet-dashboard-oxyuts-projects.vercel.app</string>
     <key>CFBundleDisplayName</key>
     <string>Diet Sync</string>
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
     <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
     <key>CFBundleName</key>
@@ -19,7 +21,7 @@
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>NSHealthShareUsageDescription</key>
-    <string>ダイエットダッシュボードへ日別の体組成と活動量を同期するために、ヘルスケアデータを読み取ります。</string>
+    <string>ダイエットダッシュボードへ日別の体組成、活動量、栄養素、摂取カロリーを同期するために、ヘルスケアデータを読み取ります。</string>
     <key>BGTaskSchedulerPermittedIdentifiers</key>
     <array>
         <string>com.dietdashboard.healthsync.refresh</string>

@@ -8,6 +8,7 @@ export interface HealthData {
   activeCalories?: number | null;
   restingCalories?: number | null;
   totalCalories?: number | null;
+  dietaryCalories?: number | null;
   // PFC栄養素
   proteinG?: number | null;
   fatG?: number | null;

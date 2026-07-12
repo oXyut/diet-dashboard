@@ -33,6 +33,7 @@ export class PrismaHealthDataRepository implements IHealthDataRepository {
         activeCalories: data.activeCalories,
         restingCalories: data.restingCalories,
         totalCalories: data.totalCalories,
+        dietaryCalories: data.dietaryCalories,
         // PFC栄養素
         proteinG: data.proteinG,
         fatG: data.fatG,
@@ -51,6 +52,7 @@ export class PrismaHealthDataRepository implements IHealthDataRepository {
         activeCalories: data.activeCalories,
         restingCalories: data.restingCalories,
         totalCalories: data.totalCalories,
+        dietaryCalories: data.dietaryCalories,
         // PFC栄養素
         proteinG: data.proteinG,
         fatG: data.fatG,
@@ -73,6 +75,7 @@ export class PrismaHealthDataRepository implements IHealthDataRepository {
         steps: data.steps,
         activeCalories: data.activeCalories,
         restingCalories: data.restingCalories,
+        dietaryCalories: data.dietaryCalories,
         // PFC栄養素
         proteinG: data.proteinG,
         fatG: data.fatG,

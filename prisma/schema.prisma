@@ -20,6 +20,7 @@ model HealthData {
   activeCalories    Int?     @map("active_calories")
   restingCalories   Int?     @map("resting_calories")
   totalCalories     Int?     @map("total_calories")
+  dietaryCalories   Int?     @map("dietary_calories")
   // PFC栄養素
   proteinG          Decimal? @map("protein_g") @db.Decimal(6, 2)
   fatG              Decimal? @map("fat_g") @db.Decimal(6, 2)

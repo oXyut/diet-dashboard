@@ -29,6 +29,18 @@ export function calculateIntakeCalories(
 }
 
 /**
+ * HealthKit の摂取カロリーを優先し、未取得時は PFC から推定する。
+ */
+export function resolveIntakeCalories(
+  dietaryCalories: number | null | undefined,
+  proteinG: number | null | undefined,
+  fatG: number | null | undefined,
+  carbohydrateG: number | null | undefined
+): number | null {
+  return dietaryCalories ?? calculateIntakeCalories(proteinG, fatG, carbohydrateG);
+}
+
+/**
  * PFC比率を計算する
  * @returns 各栄養素の比率（パーセンテージ）
  */

@@ -26,9 +26,13 @@ struct DailyHealthPayload: Codable {
     let steps: Int?
     let activeCalories: Int?
     let restingCalories: Int?
+    let dietaryCalories: Int?
+    let proteinG: Double?
+    let fatG: Double?
+    let carbohydrateG: Double?
 
     var hasValues: Bool {
-        weight != nil || bodyFatPercentage != nil || muscleMass != nil || steps != nil || activeCalories != nil || restingCalories != nil
+        weight != nil || bodyFatPercentage != nil || muscleMass != nil || steps != nil || activeCalories != nil || restingCalories != nil || dietaryCalories != nil || proteinG != nil || fatG != nil || carbohydrateG != nil
     }
 }
 
@@ -165,6 +169,10 @@ final class HealthKitReader {
     private let stepCount = HKQuantityType.quantityType(forIdentifier: .stepCount)!
     private let activeEnergy = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned)!
     private let restingEnergy = HKQuantityType.quantityType(forIdentifier: .basalEnergyBurned)!
+    private let dietaryEnergy = HKQuantityType.quantityType(forIdentifier: .dietaryEnergyConsumed)!
+    private let dietaryProtein = HKQuantityType.quantityType(forIdentifier: .dietaryProtein)!
+    private let dietaryFat = HKQuantityType.quantityType(forIdentifier: .dietaryFatTotal)!
+    private let dietaryCarbohydrates = HKQuantityType.quantityType(forIdentifier: .dietaryCarbohydrates)!
 
     private var observedQueries: [HKObserverQuery] = []
 
@@ -204,6 +212,10 @@ final class HealthKitReader {
             async let steps = sum(type: stepCount, unit: .count(), predicate: predicate)
             async let active = sum(type: activeEnergy, unit: .kilocalorie(), predicate: predicate)
             async let resting = sum(type: restingEnergy, unit: .kilocalorie(), predicate: predicate)
+            async let dietaryEnergyValue = sum(type: dietaryEnergy, unit: .kilocalorie(), predicate: predicate)
+            async let protein = sum(type: dietaryProtein, unit: .gram(), predicate: predicate)
+            async let fat = sum(type: dietaryFat, unit: .gram(), predicate: predicate)
+            async let carbohydrates = sum(type: dietaryCarbohydrates, unit: .gram(), predicate: predicate)
 
             let weightValue = await weight
             let bodyFatValue = await bodyFat
@@ -211,6 +223,10 @@ final class HealthKitReader {
             let stepValue = await steps
             let activeValue = await active
             let restingValue = await resting
+            let dietaryEnergyTotal = await dietaryEnergyValue
+            let proteinTotal = await protein
+            let fatTotal = await fat
+            let carbohydrateTotal = await carbohydrates
 
             let payload = DailyHealthPayload(
                 date: dateString(day),
@@ -219,7 +235,11 @@ final class HealthKitReader {
                 muscleMass: leanMassValue,
                 steps: stepValue.map { Int($0.rounded()) },
                 activeCalories: activeValue.map { Int($0.rounded()) },
-                restingCalories: restingValue.map { Int($0.rounded()) }
+                restingCalories: restingValue.map { Int($0.rounded()) },
+                dietaryCalories: dietaryEnergyTotal.map { Int($0.rounded()) },
+                proteinG: proteinTotal,
+                fatG: fatTotal,
+                carbohydrateG: carbohydrateTotal
             )
             if payload.hasValues { payloads.append(payload) }
         }
@@ -227,7 +247,18 @@ final class HealthKitReader {
     }
 
     private var sampleTypes: [HKQuantityType] {
-        [bodyMass, bodyFatPercentage, leanBodyMass, stepCount, activeEnergy, restingEnergy]
+        [
+            bodyMass,
+            bodyFatPercentage,
+            leanBodyMass,
+            stepCount,
+            activeEnergy,
+            restingEnergy,
+            dietaryEnergy,
+            dietaryProtein,
+            dietaryFat,
+            dietaryCarbohydrates,
+        ]
     }
 
     private func latestValue(type: HKQuantityType, unit: HKUnit, predicate: NSPredicate) async -> Double? {

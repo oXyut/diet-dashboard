@@ -6,7 +6,7 @@ import {
   RangeAchievement,
   StepsAchievement,
 } from '@/types/health';
-import { calculateIntakeCalories } from './calorieCalculator';
+import { resolveIntakeCalories } from './calorieCalculator';
 import { getTodayInJST } from './dateUtils';
 import { differenceInDays, parseISO } from 'date-fns';
 
@@ -82,7 +82,8 @@ function evaluateDailyAchievements(
     };
   }
 
-  const intakeCalories = calculateIntakeCalories(
+  const intakeCalories = resolveIntakeCalories(
+    healthData.dietaryCalories,
     healthData.proteinG,
     healthData.fatG,
     healthData.carbohydrateG

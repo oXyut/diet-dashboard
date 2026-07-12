@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 import { HealthData, Goal, GoalProgress } from '@/types/health';
 import { CustomTooltip } from './CustomTooltip';
-import { calculateIntakeCalories, calculatePFCRatio } from '@/lib/utils/calorieCalculator';
+import { calculatePFCRatio, resolveIntakeCalories } from '@/lib/utils/calorieCalculator';
 import { calculateGoalProgress } from '@/lib/utils/goalCalculator';
 import { getYesterdayInJST } from '@/lib/utils/dateUtils';
 import { calculateLinearWeightGoal } from '@/lib/utils/weightGoalCalculator';
@@ -128,8 +128,13 @@ export default function Dashboard() {
       protein: item.proteinG,
       fat: item.fatG,
       carbohydrate: item.carbohydrateG,
-      // 摂取カロリー（PFCから計算）
-      intakeCalories: calculateIntakeCalories(item.proteinG, item.fatG, item.carbohydrateG),
+      // HealthKit の実測値を優先し、未取得時は PFC から算出する
+      intakeCalories: resolveIntakeCalories(
+        item.dietaryCalories,
+        item.proteinG,
+        item.fatG,
+        item.carbohydrateG
+      ),
       // その他の栄養素
       fiber: item.fiberG,
       sugar: item.sugarG,
@@ -227,8 +232,9 @@ export default function Dashboard() {
       protein: targetData.proteinG,
       fat: targetData.fatG,
       carbohydrate: targetData.carbohydrateG,
-      // 摂取カロリー（PFCから計算）
-      intakeCalories: calculateIntakeCalories(
+      // HealthKit の実測値を優先し、未取得時は PFC から算出する
+      intakeCalories: resolveIntakeCalories(
+        targetData.dietaryCalories,
         targetData.proteinG,
         targetData.fatG,
         targetData.carbohydrateG

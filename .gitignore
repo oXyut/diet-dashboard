@@ -40,3 +40,8 @@ next-env.d.ts
 
 # claude code local settings
 .claude/settings.local.json
+
+# Xcode user-specific workspace state
+ios/DietHealthSync/DietHealthSync.xcodeproj/xcuserdata/
+ios/DietHealthSync/DietHealthSync.xcodeproj/project.xcworkspace/xcuserdata/
+.env*

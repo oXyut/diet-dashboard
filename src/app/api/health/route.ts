@@ -31,6 +31,7 @@ export const GET = withCors(async () => {
         activeCalories: row.activeCalories,
         restingCalories: row.restingCalories,
         totalCalories: row.totalCalories,
+        dietaryCalories: row.dietaryCalories,
         // PFC栄養素
         proteinG: row.proteinG ? Number(row.proteinG) : null,
         fatG: row.fatG ? Number(row.fatG) : null,
@@ -74,6 +75,7 @@ export const POST = withCors(
         activeCalories: result.activeCalories,
         restingCalories: result.restingCalories,
         totalCalories: result.totalCalories,
+        dietaryCalories: result.dietaryCalories,
         // PFC栄養素
         proteinG: result.proteinG ? Number(result.proteinG) : null,
         fatG: result.fatG ? Number(result.fatG) : null,

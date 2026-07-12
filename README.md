@@ -81,7 +81,7 @@ npm run build
 3. [`project.pbxproj`](ios/DietHealthSync/DietHealthSync.xcodeproj/project.pbxproj) の `PRODUCT_BUNDLE_IDENTIFIER` を自分の Bundle ID に変更し、Xcode で Signing Team を選択します。
 4. Xcode で `ios/DietHealthSync/DietHealthSync.xcodeproj` を開き、HealthKit capability を有効にした上で Archive し、App Store Connect へアップロードして TestFlight を作成します。フル Xcode、Apple Developer Program、App Store Connect の設定が必要です。
 
-アプリは体重・体脂肪率・除脂肪体重・歩数・アクティブエネルギー・安静時エネルギーを**読み取りのみ**で利用します。体組成は各日の最新値、活動量は日別合計を送信します。初回と以後の同期では常に過去30日を再集計するため、遅れて到着した HealthKit データも更新できます。バックグラウンド同期は iOS の実行判断に依存し、実行時刻は保証されません。
+アプリは体重・体脂肪率・除脂肪体重・歩数・アクティブエネルギー・安静時エネルギー・摂取カロリー・タンパク質・脂質・炭水化物を**読み取りのみ**で利用します。体組成は各日の最新値、活動量と栄養素は日別合計を送信します。摂取カロリーは HealthKit の記録値を保存し、記録がない場合のみダッシュボードで PFC から推定します。初回と以後の同期では常に過去30日を再集計するため、遅れて到着した HealthKit データも更新できます。バックグラウンド同期は iOS の実行判断に依存し、実行時刻は保証されません。
 
 ### 端末のペアリングと失効
 

@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { calculateIntakeCalories, calculatePFCRatio } from '../calorieCalculator';
+import {
+  calculateIntakeCalories,
+  calculatePFCRatio,
+  resolveIntakeCalories,
+} from '../calorieCalculator';
 
 describe('calorieCalculator', () => {
   describe('calculateIntakeCalories', () => {
@@ -29,6 +33,16 @@ describe('calorieCalculator', () => {
       expect(calculateIntakeCalories(10.11, null, null)).toBe(40.4);
       // 10.12*4 = 40.48 → 40.5
       expect(calculateIntakeCalories(10.12, null, null)).toBe(40.5);
+    });
+  });
+
+  describe('resolveIntakeCalories', () => {
+    it('HealthKit の摂取カロリーを PFC からの推定値より優先する', () => {
+      expect(resolveIntakeCalories(1800, 100, 50, 200)).toBe(1800);
+    });
+
+    it('HealthKit の値がない場合は PFC から推定する', () => {
+      expect(resolveIntakeCalories(null, 100, 50, 200)).toBe(1650);
     });
   });
 
