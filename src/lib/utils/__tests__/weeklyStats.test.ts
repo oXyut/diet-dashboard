@@ -72,18 +72,21 @@ describe('getRecordingStatus', () => {
 });
 
 describe('calculateCalorieBalance', () => {
-  it('摂取・消費の両方がある日だけで平均を計算する', () => {
+  it('収支は両方ある日だけ、摂取・消費の平均は各記録日で計算する', () => {
     const data = [
       makeHealthData('2026-07-14', { dietaryCalories: 1800, totalCalories: 2800 }),
       makeHealthData('2026-07-13', { dietaryCalories: 2200, totalCalories: 3000 }),
-      makeHealthData('2026-07-12', { dietaryCalories: 2000 }), // 消費なし → 除外
-      makeHealthData('2026-07-11', { totalCalories: 2500 }), // 摂取なし → 除外
+      makeHealthData('2026-07-12', { dietaryCalories: 2000 }), // 消費なし → 収支から除外
+      makeHealthData('2026-07-11', { totalCalories: 2600 }), // 摂取なし → 収支から除外
     ];
     const balance = calculateCalorieBalance(data, REF);
     expect(balance.daysWithBoth).toBe(2);
-    expect(balance.avgIntake).toBeCloseTo(2000);
-    expect(balance.avgBurned).toBeCloseTo(2900);
     expect(balance.avgBalance).toBeCloseTo(-900);
+    // 摂取平均は3日分、消費平均は3日分
+    expect(balance.intakeDays).toBe(3);
+    expect(balance.avgIntake).toBeCloseTo(2000);
+    expect(balance.burnedDays).toBe(3);
+    expect(balance.avgBurned).toBeCloseTo(2800);
   });
 
   it('PFC からの推定摂取カロリーも使う', () => {
@@ -104,7 +107,9 @@ describe('calculateCalorieBalance', () => {
     const balance = calculateCalorieBalance([], REF);
     expect(balance).toEqual({
       avgIntake: null,
+      intakeDays: 0,
       avgBurned: null,
+      burnedDays: 0,
       avgBalance: null,
       daysWithBoth: 0,
     });
@@ -147,6 +152,19 @@ describe('countWeeklyAchievements', () => {
     expect(counts.fat).toEqual({ withinDays: 0, daysWithData: 1 });
     expect(counts.carb).toEqual({ withinDays: 1, daysWithData: 1 });
     expect(counts.steps).toEqual({ withinDays: 2, daysWithData: 3 });
+    // 07-14 は3栄養素とも評価可能だが fat が over → 同時達成にならない
+    expect(counts.pfcAll).toEqual({ withinDays: 0, daysWithData: 1 });
+  });
+
+  it('P/F/C 全てが範囲内の日は pfcAll にカウントされる', () => {
+    const goal = makeGoal();
+    const data = [
+      makeHealthData('2026-07-14', { proteinG: 120, fatG: 50, carbohydrateG: 200 }), // 全てwithin
+      makeHealthData('2026-07-13', { proteinG: 120, fatG: 90, carbohydrateG: 200 }), // fatがover
+      makeHealthData('2026-07-12', { proteinG: 120, fatG: 50 }), // carbのデータなし → 評価対象外
+    ];
+    const counts = countWeeklyAchievements(goal, data, REF);
+    expect(counts.pfcAll).toEqual({ withinDays: 1, daysWithData: 2 });
   });
 
   it('目標値が未設定の指標はカウントしない', () => {

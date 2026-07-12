@@ -43,15 +43,20 @@ export function getRecordingStatus(
 }
 
 export interface CalorieBalance {
+  /** 摂取が記録された日だけの平均 */
   avgIntake: number | null;
+  intakeDays: number;
+  /** 消費が記録された日だけの平均 */
   avgBurned: number | null;
-  /** avgIntake - avgBurned（負=アンダーカロリー） */
+  burnedDays: number;
+  /** 摂取・消費の両方が記録された日だけの (摂取−消費) 平均（負=アンダーカロリー） */
   avgBalance: number | null;
   daysWithBoth: number;
 }
 
 /**
- * 直近N日のカロリー収支を計算する（摂取・消費の両方が記録された日のみで平均）
+ * 直近N日のカロリー収支を計算する
+ * 摂取・消費の平均はそれぞれ記録がある日で計算し、収支は両方が揃った日のみで計算する
  */
 export function calculateCalorieBalance(
   healthData: HealthData[],
@@ -62,7 +67,10 @@ export function calculateCalorieBalance(
   const ref = parseISO(referenceDate);
 
   let intakeSum = 0;
+  let intakeDays = 0;
   let burnedSum = 0;
+  let burnedDays = 0;
+  let balanceSum = 0;
   let daysWithBoth = 0;
 
   for (let i = 0; i < days; i++) {
@@ -77,20 +85,29 @@ export function calculateCalorieBalance(
       item.carbohydrateG
     );
     const burned = item.totalCalories;
-    if (intake === null || burned == null) continue;
 
-    intakeSum += intake;
-    burnedSum += burned;
-    daysWithBoth += 1;
+    if (intake !== null) {
+      intakeSum += intake;
+      intakeDays += 1;
+    }
+    if (burned != null) {
+      burnedSum += burned;
+      burnedDays += 1;
+    }
+    if (intake !== null && burned != null) {
+      balanceSum += intake - burned;
+      daysWithBoth += 1;
+    }
   }
 
-  if (daysWithBoth === 0) {
-    return { avgIntake: null, avgBurned: null, avgBalance: null, daysWithBoth: 0 };
-  }
-
-  const avgIntake = intakeSum / daysWithBoth;
-  const avgBurned = burnedSum / daysWithBoth;
-  return { avgIntake, avgBurned, avgBalance: avgIntake - avgBurned, daysWithBoth };
+  return {
+    avgIntake: intakeDays > 0 ? intakeSum / intakeDays : null,
+    intakeDays,
+    avgBurned: burnedDays > 0 ? burnedSum / burnedDays : null,
+    burnedDays,
+    avgBalance: daysWithBoth > 0 ? balanceSum / daysWithBoth : null,
+    daysWithBoth,
+  };
 }
 
 export interface AchievementCount {
@@ -106,6 +123,8 @@ export interface WeeklyAchievements {
   fat: AchievementCount;
   carb: AchievementCount;
   steps: AchievementCount;
+  /** P/F/C の3つ全てが評価可能で、全て範囲内だった日数 */
+  pfcAll: AchievementCount;
 }
 
 /**
@@ -126,6 +145,7 @@ export function countWeeklyAchievements(
     fat: { withinDays: 0, daysWithData: 0 },
     carb: { withinDays: 0, daysWithData: 0 },
     steps: { withinDays: 0, daysWithData: 0 },
+    pfcAll: { withinDays: 0, daysWithData: 0 },
   };
 
   const tallyRange = (count: AchievementCount, result: ReturnType<typeof evaluateRange>) => {
@@ -146,19 +166,33 @@ export function countWeeklyAchievements(
       item.carbohydrateG
     );
 
+    const proteinResult = evaluateRange(
+      item.proteinG,
+      goal.daily_protein_min_g,
+      goal.daily_protein_max_g
+    );
+    const fatResult = evaluateRange(item.fatG, goal.daily_fat_min_g, goal.daily_fat_max_g);
+    const carbResult = evaluateRange(
+      item.carbohydrateG,
+      goal.daily_carb_min_g,
+      goal.daily_carb_max_g
+    );
+
     tallyRange(
       counts.calories,
       evaluateRange(intake, goal.daily_calorie_intake_min, goal.daily_calorie_intake_max)
     );
-    tallyRange(
-      counts.protein,
-      evaluateRange(item.proteinG, goal.daily_protein_min_g, goal.daily_protein_max_g)
-    );
-    tallyRange(counts.fat, evaluateRange(item.fatG, goal.daily_fat_min_g, goal.daily_fat_max_g));
-    tallyRange(
-      counts.carb,
-      evaluateRange(item.carbohydrateG, goal.daily_carb_min_g, goal.daily_carb_max_g)
-    );
+    tallyRange(counts.protein, proteinResult);
+    tallyRange(counts.fat, fatResult);
+    tallyRange(counts.carb, carbResult);
+
+    const pfcResults = [proteinResult, fatResult, carbResult];
+    if (pfcResults.every((result) => result !== 'no_data')) {
+      counts.pfcAll.daysWithData += 1;
+      if (pfcResults.every((result) => result === 'within')) {
+        counts.pfcAll.withinDays += 1;
+      }
+    }
 
     const stepsResult = evaluateSteps(item.steps, goal.daily_steps_target);
     if (stepsResult !== 'no_data') {

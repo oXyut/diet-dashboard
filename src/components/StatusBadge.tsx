@@ -21,7 +21,7 @@ export function StatusBadge({ tone, icon, children, className }: StatusBadgeProp
   const color = TONE_COLOR[tone];
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${className ?? ''}`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-sm font-semibold ${className ?? ''}`}
       style={{ color, backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)` }}
     >
       {icon}

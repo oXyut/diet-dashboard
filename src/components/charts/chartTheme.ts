@@ -1,3 +1,5 @@
+import { createElement } from 'react';
+
 // チャート共通のダークテーマ定数。色の実体は globals.css の CSS 変数が単一ソース
 export const chartColors = {
   weight: 'var(--chart-weight)',
@@ -6,6 +8,7 @@ export const chartColors = {
   protein: 'var(--chart-protein)',
   fat: 'var(--chart-fat)',
   carb: 'var(--chart-carb)',
+  steps: 'var(--chart-steps)',
   target: 'var(--chart-target)',
   grid: 'var(--chart-grid)',
   axis: 'var(--chart-axis)',
@@ -42,6 +45,10 @@ export const legendWrapperStyle = {
   color: 'var(--text-secondary)',
   fontSize: 12,
 } as const;
+
+// 凡例のテキストは系列色ではなくテキストトークンで表示する(識別は隣のスウォッチが担う)
+export const legendFormatter = (value: string) =>
+  createElement('span', { style: { color: 'var(--text-secondary)' } }, value);
 
 export const tooltipCursor = { stroke: 'var(--border)', strokeWidth: 1 } as const;
 
