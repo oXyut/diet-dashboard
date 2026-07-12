@@ -134,25 +134,6 @@ export function evaluateSteps(
 }
 
 /**
- * 達成状況の色を取得する
- */
-export function getAchievementColor(status: AchievementStatus): string {
-  switch (status) {
-    case 'within':
-    case 'achieved':
-      return 'text-green-600 bg-green-50 border-green-200';
-    case 'under':
-    case 'not_achieved':
-      return 'text-red-600 bg-red-50 border-red-200';
-    case 'over':
-      return 'text-orange-600 bg-orange-50 border-orange-200';
-    case 'no_data':
-    default:
-      return 'text-gray-600 bg-gray-50 border-gray-200';
-  }
-}
-
-/**
  * 達成状況のテキストを取得する
  */
 export function getAchievementText(status: AchievementStatus): string {

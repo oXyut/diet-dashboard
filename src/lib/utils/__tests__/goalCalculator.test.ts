@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { calculateGoalProgress, getAchievementColor, getAchievementText } from '../goalCalculator';
+import { calculateGoalProgress, getAchievementText } from '../goalCalculator';
 import { Goal, HealthData } from '@/types/health';
 
 function makeGoal(overrides: Partial<Goal> = {}): Goal {
@@ -223,17 +223,6 @@ describe('goalCalculator', () => {
       expect(result.dailyAchievements.steps).toBe('no_data');
       // PFCすべてnull → カロリーもno_data
       expect(result.dailyAchievements.calories).toBe('no_data');
-    });
-  });
-
-  describe('getAchievementColor', () => {
-    it('ステータスに応じた色クラスを返す', () => {
-      expect(getAchievementColor('within')).toContain('green');
-      expect(getAchievementColor('achieved')).toContain('green');
-      expect(getAchievementColor('under')).toContain('red');
-      expect(getAchievementColor('not_achieved')).toContain('red');
-      expect(getAchievementColor('over')).toContain('orange');
-      expect(getAchievementColor('no_data')).toContain('gray');
     });
   });
 
