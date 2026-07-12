@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { hashDeviceToken } from '@/lib/mobileCredentials';
+import { isDashboardSessionValid, DASHBOARD_SESSION_COOKIE } from '@/lib/dashboardAuth';
 
 // タイミング攻撃を防ぐための定数時間比較
 // 長さが異なる場合も早期returnせず、必ずtimingSafeEqualを実行する
@@ -90,6 +91,21 @@ export function withHealthWriteAuth<T extends unknown[]>(
       return handler(request, ...args);
     }
 
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  };
+}
+
+// ブラウザの設定画面は管理セッション、外部運用は従来のAPIキーで更新できる。
+export function withGoalWriteAuth<T extends unknown[]>(
+  handler: (request: NextRequest, ...args: T) => Promise<NextResponse>
+) {
+  return async (request: NextRequest, ...args: T): Promise<NextResponse> => {
+    if (process.env.API_SECRET_KEY && hasValidApiKey(request)) {
+      return handler(request, ...args);
+    }
+    if (isDashboardSessionValid(request.cookies.get(DASHBOARD_SESSION_COOKIE)?.value)) {
+      return handler(request, ...args);
+    }
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   };
 }

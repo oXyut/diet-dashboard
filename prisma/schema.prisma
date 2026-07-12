@@ -41,6 +41,10 @@ model Goal {
   name                    String   @db.String(100)
   description             String?
   targetWeightKg          Decimal? @map("target_weight_kg") @db.Decimal(5, 2)
+  startingWeightKg        Decimal? @map("starting_weight_kg") @db.Decimal(5, 2)
+  proteinTargetPercent    Decimal? @map("protein_target_percent") @db.Decimal(5, 2)
+  fatTargetPercent        Decimal? @map("fat_target_percent") @db.Decimal(5, 2)
+  carbohydrateTargetPercent Decimal? @map("carbohydrate_target_percent") @db.Decimal(5, 2)
   startDate               DateTime @map("start_date") @db.Date
   endDate                 DateTime @map("end_date") @db.Date
   dailyCalorieIntakeMin   Int?     @map("daily_calorie_intake_min")

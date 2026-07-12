@@ -44,6 +44,10 @@ export interface Goal {
   name: string;
   description?: string | null;
   target_weight_kg?: number | null;
+  starting_weight_kg?: number | null;
+  protein_target_percent?: number | null;
+  fat_target_percent?: number | null;
+  carbohydrate_target_percent?: number | null;
   start_date: string;
   end_date: string;
   daily_calorie_intake_min?: number | null;

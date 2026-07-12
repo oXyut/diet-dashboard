@@ -15,6 +15,8 @@ export interface ChartDataPoint {
   fat: number | null | undefined;
   carbohydrate: number | null | undefined;
   intakeCalories: number | null;
+  deficit: number | null;
+  weightAverage: number | null;
   targetWeight?: number;
   linearTarget?: number;
 }
@@ -30,28 +32,51 @@ export function buildChartData(
 ): ChartDataPoint[] {
   const cutoffDate = rangeDays !== null ? subDays(new Date(), rangeDays) : null;
 
-  const filteredData = healthData
-    .filter((item) => item.date && (cutoffDate === null || new Date(item.date) >= cutoffDate))
+  const allData = healthData
+    .filter((item) => item.date)
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  const chartData: ChartDataPoint[] = filteredData.map((item) => ({
-    date: item.date,
-    weight: item.weight,
-    bodyFat: item.bodyFatPercentage,
-    muscleMass: item.muscleMass,
-    steps: item.steps,
-    calories: item.totalCalories,
-    protein: item.proteinG,
-    fat: item.fatG,
-    carbohydrate: item.carbohydrateG,
-    // HealthKit の実測値を優先し、未取得時は PFC から算出する
-    intakeCalories: resolveIntakeCalories(
+  const filteredData = allData.filter(
+    (item) => cutoffDate === null || new Date(item.date) >= cutoffDate
+  );
+
+  const rollingAverages = new Map<string, number | null>();
+  allData.forEach((item, index) => {
+    const weights = allData
+      .slice(Math.max(0, index - 6), index + 1)
+      .map((entry) => entry.weight)
+      .filter((weight): weight is number => weight != null);
+    rollingAverages.set(
+      item.date,
+      weights.length ? weights.reduce((sum, weight) => sum + weight, 0) / weights.length : null
+    );
+  });
+
+  const chartData: ChartDataPoint[] = filteredData.map((item) => {
+    const intakeCalories = resolveIntakeCalories(
       item.dietaryCalories,
       item.proteinG,
       item.fatG,
       item.carbohydrateG
-    ),
-  }));
+    );
+    return {
+      date: item.date,
+      weight: item.weight,
+      bodyFat: item.bodyFatPercentage,
+      muscleMass: item.muscleMass,
+      steps: item.steps,
+      calories: item.totalCalories,
+      protein: item.proteinG,
+      fat: item.fatG,
+      carbohydrate: item.carbohydrateG,
+      intakeCalories,
+      deficit:
+        item.totalCalories != null && intakeCalories != null
+          ? item.totalCalories - intakeCalories
+          : null,
+      weightAverage: rollingAverages.get(item.date) ?? null,
+    };
+  });
 
   if (!goal) {
     return chartData;

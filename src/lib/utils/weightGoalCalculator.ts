@@ -55,12 +55,13 @@ export function calculateLinearWeightGoal(
   const endDate = parseISO(goal.end_date);
 
   const startWeight = estimateStartWeight(goal, healthData);
-  if (startWeight === null) {
+  const fixedStartWeight = goal.starting_weight_kg ?? startWeight;
+  if (fixedStartWeight === null) {
     return [];
   }
 
   const totalDays = differenceInDays(endDate, startDate);
-  const dailyWeightLoss = (startWeight - goal.target_weight_kg) / totalDays;
+  const dailyWeightLoss = (fixedStartWeight - goal.target_weight_kg) / totalDays;
 
   // 表示範囲の日付を生成（健康データと同じ形式に合わせる）
   const result: Array<{ date: string; targetWeight: number; linearTarget: number }> = [];
@@ -77,7 +78,7 @@ export function calculateLinearWeightGoal(
     // 年情報を保持するためYYYY-MM-DD形式で保持し、表示時のみMM/ddにフォーマットする
     const dateStr = format(currentDate, 'yyyy-MM-dd');
     const daysSinceStart = differenceInDays(currentDate, startDate);
-    const linearTarget = startWeight - dailyWeightLoss * daysSinceStart;
+    const linearTarget = fixedStartWeight - dailyWeightLoss * daysSinceStart;
 
     result.push({
       date: dateStr,

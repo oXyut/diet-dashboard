@@ -70,11 +70,22 @@ export default function WeightChart({ data, targetWeightKg, height = 320 }: Weig
         <Line
           type="monotone"
           dataKey="weight"
-          name="体重"
+          name="実測体重"
           stroke={chartColors.weight}
-          strokeWidth={2}
+          strokeWidth={1}
+          strokeOpacity={0.35}
           connectNulls
           dot={seriesDot(chartColors.weight)}
+          activeDot={{ r: 5 }}
+        />
+        <Line
+          type="monotone"
+          dataKey="weightAverage"
+          name="7日平均"
+          stroke={chartColors.weight}
+          strokeWidth={3}
+          connectNulls
+          dot={false}
           activeDot={{ r: 5 }}
         />
       </LineChart>

@@ -73,7 +73,7 @@ export function calculateTargetPaceKgPerWeek(goal: Goal, healthData: HealthData[
     return null;
   }
 
-  const startWeight = estimateStartWeight(goal, healthData);
+  const startWeight = goal.starting_weight_kg ?? estimateStartWeight(goal, healthData);
   if (startWeight === null) {
     return null;
   }

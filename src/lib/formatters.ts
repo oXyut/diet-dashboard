@@ -33,6 +33,12 @@ export function formatGoal(goal: PrismaGoal): Goal {
     name: goal.name,
     description: goal.description,
     target_weight_kg: goal.targetWeightKg ? Number(goal.targetWeightKg) : null,
+    starting_weight_kg: goal.startingWeightKg != null ? Number(goal.startingWeightKg) : null,
+    protein_target_percent:
+      goal.proteinTargetPercent != null ? Number(goal.proteinTargetPercent) : null,
+    fat_target_percent: goal.fatTargetPercent != null ? Number(goal.fatTargetPercent) : null,
+    carbohydrate_target_percent:
+      goal.carbohydrateTargetPercent != null ? Number(goal.carbohydrateTargetPercent) : null,
     start_date: goal.startDate.toISOString().slice(0, 10),
     end_date: goal.endDate.toISOString().slice(0, 10),
     daily_calorie_intake_min: goal.dailyCalorieIntakeMin,

@@ -21,3 +21,22 @@ export const goalSchema = z.object({
 });
 
 export type GoalInput = z.infer<typeof goalSchema>;
+
+export const goalPlanSchema = z
+  .object({
+    target_weight_kg: z.number().positive(),
+    end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
+    protein_target_percent: z.number().positive().max(100),
+    fat_target_percent: z.number().nonnegative().max(100),
+    carbohydrate_target_percent: z.number().nonnegative().max(100),
+    daily_steps_target: z.number().int().positive().nullable().optional(),
+  })
+  .superRefine((value, context) => {
+    const total =
+      value.protein_target_percent + value.fat_target_percent + value.carbohydrate_target_percent;
+    if (Math.abs(total - 100) > 0.001) {
+      context.addIssue({ code: 'custom', message: 'P/F/Cの合計は100%にしてください' });
+    }
+  });
+
+export type GoalPlanInput = z.infer<typeof goalPlanSchema>;
