@@ -9,14 +9,19 @@ import {
 } from './planCalculator';
 
 export type ReviewTone = 'good' | 'bad' | 'none';
+export type PfcIssue = 'protein_low' | 'fat_high' | 'carbohydrate_high';
 
 export interface DailyReview {
   date: string;
-  deficit: number | null;
+  intake: number | null;
+  burned: number | null;
+  /** 摂取 - 消費。負の値は消費が摂取を上回る状態、正の値は摂取超過。 */
+  calorieBalance: number | null;
   protein: number | null;
   fat: number | null;
   carbohydrate: number | null;
   pfcTone: ReviewTone;
+  pfcIssues: PfcIssue[];
   steps: number | null;
   stepsTone: ReviewTone;
 }
@@ -24,8 +29,10 @@ export interface DailyReview {
 export interface WeeklyReview {
   daily: DailyReview[];
   calories: {
-    actualDeficit: number | null;
-    requiredDeficit: number | null;
+    /** 7日換算した摂取 - 消費。負の値は消費が摂取を上回る状態。 */
+    actualBalance: number | null;
+    /** 7日換算した目標カロリー差。 */
+    targetBalance: number | null;
     avgBurned: number | null;
     avgIntake: number | null;
     avgResting: number | null;
@@ -40,17 +47,25 @@ export interface WeeklyReview {
     carbohydrate: number | null;
     validDays: number;
     tone: ReviewTone;
+    issues: PfcIssue[];
   };
   steps: { latest: number | null; average: number | null; validDays: number; achievedDays: number };
 }
 
+function getPfcIssues(goal: Goal, ratio: ReturnType<typeof calculatePFCRatio>): PfcIssue[] {
+  if (!ratio || !isPlanGoal(goal)) return [];
+  return [
+    ...(ratio.protein < goal.protein_target_percent ? (['protein_low'] as const) : []),
+    ...(ratio.fat > goal.fat_target_percent ? (['fat_high'] as const) : []),
+    ...(ratio.carbohydrate > goal.carbohydrate_target_percent
+      ? (['carbohydrate_high'] as const)
+      : []),
+  ];
+}
+
 function pfcTone(goal: Goal, ratio: ReturnType<typeof calculatePFCRatio>): ReviewTone {
   if (!ratio || !isPlanGoal(goal)) return 'none';
-  return ratio.protein >= goal.protein_target_percent &&
-    ratio.fat <= goal.fat_target_percent &&
-    ratio.carbohydrate <= goal.carbohydrate_target_percent
-    ? 'good'
-    : 'bad';
+  return getPfcIssues(goal, ratio).length === 0 ? 'good' : 'bad';
 }
 
 export function calculateWeeklyReview(
@@ -64,8 +79,8 @@ export function calculateWeeklyReview(
     const intake = item
       ? resolveIntakeCalories(item.dietaryCalories, item.proteinG, item.fatG, item.carbohydrateG)
       : null;
-    const deficit =
-      intake != null && item?.totalCalories != null ? item.totalCalories - intake : null;
+    const burned = item?.totalCalories ?? null;
+    const calorieBalance = intake != null && burned != null ? intake - burned : null;
     const ratio = item ? calculatePFCRatio(item.proteinG, item.fatG, item.carbohydrateG) : null;
     const stepTone: ReviewTone =
       item?.steps == null || goal.daily_steps_target == null
@@ -75,24 +90,28 @@ export function calculateWeeklyReview(
           : 'bad';
     return {
       date,
-      deficit,
+      intake,
+      burned,
+      calorieBalance,
       protein: ratio?.protein ?? null,
       fat: ratio?.fat ?? null,
       carbohydrate: ratio?.carbohydrate ?? null,
       pfcTone: pfcTone(goal, ratio),
+      pfcIssues: getPfcIssues(goal, ratio),
       steps: item?.steps ?? null,
       stepsTone: stepTone,
     };
   });
 
-  const paired = daily.filter((item) => item.deficit != null);
+  const paired = daily.filter((item) => item.calorieBalance != null);
   const calorieItems = paired.map((item) => byDate.get(item.date)!);
   const dailyRequired = requiredDailyDeficit(goal);
-  const actualDeficit =
+  const actualBalance =
     paired.length >= MIN_WEEKLY_DATA_DAYS
-      ? (paired.reduce((sum, item) => sum + (item.deficit ?? 0), 0) / paired.length) * REVIEW_DAYS
+      ? (paired.reduce((sum, item) => sum + (item.calorieBalance ?? 0), 0) / paired.length) *
+        REVIEW_DAYS
       : null;
-  const requiredDeficit = dailyRequired == null ? null : dailyRequired * REVIEW_DAYS;
+  const targetBalance = dailyRequired == null ? null : -dailyRequired * REVIEW_DAYS;
   const average = (values: Array<number | null | undefined>) => {
     const actual = values.filter((value): value is number => value != null);
     return actual.length ? actual.reduce((sum, value) => sum + value, 0) / actual.length : null;
@@ -124,8 +143,8 @@ export function calculateWeeklyReview(
   return {
     daily,
     calories: {
-      actualDeficit,
-      requiredDeficit,
+      actualBalance,
+      targetBalance,
       avgBurned: average(calorieItems.map((item) => item.totalCalories)),
       avgIntake: average(
         calorieItems.map((item) =>
@@ -140,9 +159,9 @@ export function calculateWeeklyReview(
           : null,
       validDays: paired.length,
       tone:
-        actualDeficit == null || requiredDeficit == null
+        actualBalance == null || targetBalance == null
           ? 'none'
-          : actualDeficit >= requiredDeficit
+          : actualBalance <= targetBalance
             ? 'good'
             : 'bad',
     },
@@ -152,6 +171,7 @@ export function calculateWeeklyReview(
       carbohydrate: pfc?.carbohydrate ?? null,
       validDays: pfcItems.length,
       tone: pfcTone(goal, pfc),
+      issues: getPfcIssues(goal, pfc),
     },
     steps: {
       latest: daily[daily.length - 1]?.steps ?? null,

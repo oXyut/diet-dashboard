@@ -25,7 +25,7 @@ function data(date: string, weight: number): HealthData {
 }
 
 describe('planCalculator', () => {
-  it('開始日と期限日を含めて必要日次赤字を計算する', () => {
+  it('開始日と期限日を含めて目標日次収支を計算する', () => {
     // 2kg * 7,700kcal / 10日
     expect(requiredDailyDeficit(goal())).toBeCloseTo((2 * KCAL_PER_KG_FAT) / 10);
   });

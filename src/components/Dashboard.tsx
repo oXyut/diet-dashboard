@@ -10,7 +10,7 @@ import { buildChartData } from '@/lib/utils/chartData';
 import { getYesterdayInJST } from '@/lib/utils/dateUtils';
 import { calculateWeeklyWeightPace } from '@/lib/utils/dietStatus';
 import { averageRecentWeight, isPlanGoal, requiredDailyDeficit } from '@/lib/utils/planCalculator';
-import { calculateWeeklyReview, ReviewTone } from '@/lib/utils/weeklyReview';
+import { calculateWeeklyReview, PfcIssue, ReviewTone } from '@/lib/utils/weeklyReview';
 import Footer from './Footer';
 import RangeSelector, { ChartRange } from './RangeSelector';
 import SectionCard from './SectionCard';
@@ -38,13 +38,83 @@ const iconFor = (tone: ReviewTone) =>
   );
 const formatKcal = (value: number | null) =>
   value == null ? '—' : `${Math.round(value).toLocaleString()} kcal`;
+const formatKcalDifference = (value: number | null) =>
+  value == null ? '—' : `${value > 0 ? '+' : ''}${Math.round(value).toLocaleString()} kcal`;
 const formatPercent = (value: number | null) => (value == null ? '—' : `${value.toFixed(1)}%`);
+
+function calorieTone(calorieBalance: number | null, targetBalance: number | null): ReviewTone {
+  if (calorieBalance == null || targetBalance == null) return 'none';
+  return calorieBalance <= targetBalance ? 'good' : 'bad';
+}
+
+function CalorieStatusIcon({ tone }: { tone: ReviewTone }) {
+  const label = tone === 'good' ? '目標達成' : tone === 'bad' ? '目標未達' : 'データ不足';
+  const color =
+    tone === 'good' ? 'text-status-good' : tone === 'bad' ? 'text-status-bad' : 'text-ink-muted';
+  return (
+    <span className={`inline-flex ${color}`} aria-label={label} title={label}>
+      {tone === 'good' ? (
+        <CheckCircle2 className="h-4 w-4" />
+      ) : tone === 'bad' ? (
+        <AlertCircle className="h-4 w-4" />
+      ) : (
+        <Minus className="h-4 w-4" />
+      )}
+    </span>
+  );
+}
+
+const PFC_ISSUE_LABEL: Record<PfcIssue, string> = {
+  protein_low: 'たんぱく質不足',
+  fat_high: '脂質過多',
+  carbohydrate_high: '炭水化物過多',
+};
+
+const PFC_ISSUE_ICON: Record<PfcIssue, string> = {
+  protein_low: 'P↓',
+  fat_high: 'F↑',
+  carbohydrate_high: 'C↑',
+};
+
+function pfcStatusLabel(tone: ReviewTone, issues: PfcIssue[]) {
+  if (tone === 'good') return 'PFC適正';
+  if (tone === 'bad') return issues.map((issue) => PFC_ISSUE_LABEL[issue]).join('・');
+  return 'データ不足';
+}
 
 function ReviewBadge({ tone, good, bad }: { tone: ReviewTone; good: string; bad: string }) {
   return (
     <StatusBadge tone={toneFor(tone)} icon={iconFor(tone)}>
       {tone === 'good' ? good : tone === 'bad' ? bad : 'データ不足'}
     </StatusBadge>
+  );
+}
+
+function PfcIndicator({ tone, issues }: { tone: ReviewTone; issues: PfcIssue[] }) {
+  const label = pfcStatusLabel(tone, issues);
+  if (tone === 'none') return <span className="text-xs text-ink-muted">—</span>;
+  if (tone === 'good') {
+    return (
+      <span
+        className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-status-good/15 text-status-good"
+        aria-label={label}
+        title={label}
+      >
+        <CheckCircle2 className="h-3.5 w-3.5" />
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex flex-wrap gap-1" aria-label={label} title={label}>
+      {issues.map((issue) => (
+        <span
+          key={issue}
+          className="inline-flex h-6 items-center rounded bg-status-bad/15 px-1.5 text-[10px] font-bold text-status-bad"
+        >
+          {PFC_ISSUE_ICON[issue]}
+        </span>
+      ))}
+    </span>
   );
 }
 
@@ -128,18 +198,26 @@ function MacroOverview({
   );
 }
 
-function DailyCheck({ review }: { review: ReturnType<typeof calculateWeeklyReview> }) {
+function DailyCheck({
+  review,
+  targetBalance,
+}: {
+  review: ReturnType<typeof calculateWeeklyReview>;
+  targetBalance: number | null;
+}) {
   return (
     <SectionCard
       title="日別チェック"
       action={<span className="text-xs text-ink-muted">直近7日</span>}
     >
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[600px] text-sm">
+        <table className="w-full min-w-[780px] text-sm">
           <thead className="text-xs text-ink-muted">
             <tr className="border-b border-line text-left">
               <th className="pb-2 font-medium">日付</th>
-              <th className="pb-2 font-medium">赤字</th>
+              <th className="pb-2 font-medium">摂取</th>
+              <th className="pb-2 font-medium">消費</th>
+              <th className="pb-2 font-medium">収支</th>
               <th className="pb-2 font-medium">PFC</th>
               <th className="pb-2 font-medium">歩数</th>
               <th className="pb-2 font-medium">記録</th>
@@ -147,27 +225,31 @@ function DailyCheck({ review }: { review: ReturnType<typeof calculateWeeklyRevie
           </thead>
           <tbody>
             {review.daily.map((day) => {
-              const hasRecord = day.deficit != null || day.protein != null || day.steps != null;
+              const dayCalorieTone = calorieTone(day.calorieBalance, targetBalance);
+              const hasRecord =
+                day.intake != null ||
+                day.burned != null ||
+                day.protein != null ||
+                day.steps != null;
               return (
                 <tr key={day.date} className="border-b border-line/60 last:border-0">
                   <td className="py-2.5 text-ink-secondary">
                     {format(parseISO(day.date), 'M/d (E)', { locale: ja })}
                   </td>
-                  <td
-                    className={
-                      day.deficit == null
-                        ? 'text-ink-muted'
-                        : day.deficit >= 0
-                          ? 'text-status-good'
-                          : 'text-status-bad'
-                    }
-                  >
-                    {day.deficit == null
-                      ? '—'
-                      : `${day.deficit >= 0 ? '+' : ''}${Math.round(day.deficit).toLocaleString()} kcal`}
+                  <td className={day.intake == null ? 'text-ink-muted' : 'text-ink-secondary'}>
+                    {formatKcal(day.intake)}
+                  </td>
+                  <td className={day.burned == null ? 'text-ink-muted' : 'text-ink-secondary'}>
+                    {formatKcal(day.burned)}
+                  </td>
+                  <td className="text-ink-secondary">
+                    <span className="inline-flex items-center gap-1.5">
+                      {formatKcalDifference(day.calorieBalance)}
+                      <CalorieStatusIcon tone={dayCalorieTone} />
+                    </span>
                   </td>
                   <td>
-                    <ReviewBadge tone={day.pfcTone} good="達成" bad="要調整" />
+                    <PfcIndicator tone={day.pfcTone} issues={day.pfcIssues} />
                   </td>
                   <td>
                     <ReviewBadge
@@ -285,6 +367,7 @@ export default function Dashboard({ healthData, goals }: DashboardProps) {
     [healthData, referenceDate]
   );
   const dailyDeficit = plan ? requiredDailyDeficit(plan) : null;
+  const targetDailyBalance = dailyDeficit == null ? null : -dailyDeficit;
   const latestDate = healthData[0]?.date ?? null;
 
   if (!plan || !review) {
@@ -303,7 +386,7 @@ export default function Dashboard({ healthData, goals }: DashboardProps) {
           <section className="mt-6 rounded-xl border border-line bg-surface p-6 sm:p-8">
             <p className="text-sm font-semibold text-ink">新しい減量計画を設定してください</p>
             <p className="mt-2 max-w-xl text-sm leading-relaxed text-ink-muted">
-              目標体重と期限から必要なカロリー赤字を算出し、週次のカロリー収支とPFCバランスで進捗を確認します。
+              目標体重と期限から目標カロリー収支を算出し、週次の摂取・消費とPFCバランスで進捗を確認します。
             </p>
             <Link
               href="/settings"
@@ -395,12 +478,14 @@ export default function Dashboard({ healthData, goals }: DashboardProps) {
             <div className="border-t border-line pt-6 lg:border-l lg:border-t-0 lg:pl-7 lg:pt-0">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm font-semibold text-ink">今週のエネルギー計画</p>
-                <ReviewBadge tone={review.calories.tone} good="赤字を達成" bad="赤字が不足" />
+                <CalorieStatusIcon tone={review.calories.tone} />
               </div>
               <div className="mt-5 grid grid-cols-2 gap-3">
                 <div>
-                  <p className="text-xs text-ink-muted">必要日次赤字</p>
-                  <p className="mt-1 text-xl font-semibold text-ink">{formatKcal(dailyDeficit)}</p>
+                  <p className="text-xs text-ink-muted">目標日次収支</p>
+                  <p className="mt-1 text-xl font-semibold text-ink">
+                    {formatKcalDifference(targetDailyBalance)}
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs text-ink-muted">摂取カロリー目安</p>
@@ -409,15 +494,15 @@ export default function Dashboard({ healthData, goals }: DashboardProps) {
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-ink-muted">今週の実績赤字</p>
+                  <p className="text-xs text-ink-muted">今週の収支</p>
                   <p className="mt-1 text-xl font-semibold text-ink">
-                    {formatKcal(review.calories.actualDeficit)}
+                    {formatKcalDifference(review.calories.actualBalance)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-ink-muted">今週の目標赤字</p>
+                  <p className="text-xs text-ink-muted">今週の目標収支</p>
                   <p className="mt-1 text-xl font-semibold text-ink">
-                    {formatKcal(review.calories.requiredDeficit)}
+                    {formatKcalDifference(review.calories.targetBalance)}
                   </p>
                 </div>
               </div>
@@ -437,15 +522,18 @@ export default function Dashboard({ healthData, goals }: DashboardProps) {
           >
             <div className="flex items-baseline justify-between gap-3">
               <p className="text-2xl font-semibold text-ink">
-                {formatKcal(review.calories.actualDeficit)}
+                {formatKcalDifference(review.calories.actualBalance)}
               </p>
-              <ReviewBadge tone={review.calories.tone} good="達成" bad="不足" />
+              <CalorieStatusIcon tone={review.calories.tone} />
             </div>
             <p className="mt-2 text-xs text-ink-muted">
-              目標 {formatKcal(review.calories.requiredDeficit)} ・ 記録 {review.calories.validDays}
+              目標 {formatKcalDifference(review.calories.targetBalance)} ・ 記録{' '}
+              {review.calories.validDays}
               /7日
             </p>
             <div className="mt-4 space-y-1 text-xs text-ink-secondary">
+              <p>摂取 {formatKcal(review.calories.avgIntake)}</p>
+              <p>総消費 {formatKcal(review.calories.avgBurned)}</p>
               <p>安静時 {formatKcal(review.calories.avgResting)}</p>
               <p>活動 {formatKcal(review.calories.avgActive)}</p>
             </div>
@@ -458,7 +546,11 @@ export default function Dashboard({ healthData, goals }: DashboardProps) {
           >
             <div className="flex items-center justify-between">
               <p className="text-xs text-ink-muted">{review.pfc.validDays}/7日平均</p>
-              <ReviewBadge tone={review.pfc.tone} good="すべて達成" bad="要調整" />
+              <ReviewBadge
+                tone={review.pfc.tone}
+                good="PFC適正"
+                bad={pfcStatusLabel(review.pfc.tone, review.pfc.issues)}
+              />
             </div>
             <div className="mt-4 divide-y divide-line">
               <MacroOverview
@@ -506,7 +598,7 @@ export default function Dashboard({ healthData, goals }: DashboardProps) {
           </SectionCard>
         </div>
 
-        <DailyCheck review={review} />
+        <DailyCheck review={review} targetBalance={targetDailyBalance} />
 
         <div className="flex items-center justify-between pt-1">
           <h2 className="text-base font-semibold text-ink">推移</h2>
@@ -520,10 +612,10 @@ export default function Dashboard({ healthData, goals }: DashboardProps) {
         </SectionCard>
         <div className="grid gap-4 md:grid-cols-2">
           <SectionCard
-            title="今週の日別赤字"
-            action={<span className="text-xs text-ink-muted">総消費 − 摂取</span>}
+            title="今週の日別カロリー収支"
+            action={<span className="text-xs text-ink-muted">摂取 − 消費</span>}
           >
-            <DeficitChart data={chartData} targetDeficit={dailyDeficit} />
+            <DeficitChart data={chartData} targetBalance={targetDailyBalance} />
           </SectionCard>
           <SectionCard
             title="PFCの7日推移"
@@ -539,12 +631,18 @@ export default function Dashboard({ healthData, goals }: DashboardProps) {
           {detailPanel === 'calories' && (
             <div>
               <DetailRow
-                label="週次実績赤字"
-                value={formatKcal(review.calories.actualDeficit)}
+                label="今週のカロリー収支"
+                value={formatKcalDifference(review.calories.actualBalance)}
                 emphasis
               />
-              <DetailRow label="週次目標赤字" value={formatKcal(review.calories.requiredDeficit)} />
-              <DetailRow label="必要日次赤字" value={formatKcal(dailyDeficit)} />
+              <DetailRow
+                label="今週の目標カロリー収支"
+                value={formatKcalDifference(review.calories.targetBalance)}
+              />
+              <DetailRow
+                label="目標日次カロリー収支"
+                value={formatKcalDifference(targetDailyBalance)}
+              />
               <DetailRow label="摂取カロリー目安" value={formatKcal(review.calories.budget)} />
               <DetailRow label="総消費平均" value={formatKcal(review.calories.avgBurned)} />
               <DetailRow label="摂取平均" value={formatKcal(review.calories.avgIntake)} />

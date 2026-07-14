@@ -36,14 +36,15 @@ function day(dayNumber: number, overrides: Partial<HealthData> = {}): HealthData
 }
 
 describe('calculateWeeklyReview', () => {
-  it('5日以上の記録を7日換算し、赤字とPFCを評価する', () => {
+  it('5日以上の記録を7日換算し、カロリー差とPFCを評価する', () => {
     const review = calculateWeeklyReview(
       goal,
       [8, 9, 10, 11, 12].map((value) => day(value)),
       '2026-07-14'
     );
     expect(review.calories.validDays).toBe(5);
-    expect(review.calories.actualDeficit).toBe(3500);
+    expect(review.calories.actualBalance).toBe(-3500);
+    expect(review.calories.targetBalance).toBeLessThan(0);
     expect(review.calories.tone).toBe('good');
     expect(review.pfc.validDays).toBe(5);
     expect(review.pfc.tone).toBe('good');
@@ -56,8 +57,24 @@ describe('calculateWeeklyReview', () => {
       [11, 12, 13, 14].map((value) => day(value)),
       '2026-07-14'
     );
-    expect(review.calories.actualDeficit).toBeNull();
+    expect(review.calories.actualBalance).toBeNull();
     expect(review.calories.tone).toBe('none');
     expect(review.pfc.tone).toBe('none');
+  });
+
+  it('PFCの不足・過多を項目ごとに返す', () => {
+    const review = calculateWeeklyReview(
+      goal,
+      [
+        day(14, {
+          proteinG: 50,
+          fatG: 100,
+          carbohydrateG: 100,
+        }),
+      ],
+      '2026-07-14'
+    );
+
+    expect(review.daily.at(-1)?.pfcIssues).toEqual(['protein_low', 'fat_high']);
   });
 });

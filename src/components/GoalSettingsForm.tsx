@@ -109,7 +109,7 @@ export default function GoalSettingsForm({ goal }: GoalSettingsFormProps) {
         />
       </label>
       <p className="rounded-lg bg-surface-2 p-3 text-xs leading-relaxed text-ink-muted">
-        保存時の直近7日間の体重平均を開始体重として固定し、目標体重との差を1kg=7,700kcalで必要赤字へ換算します。保存すると、現在の有効な計画は履歴になります。
+        保存時の直近7日間の体重平均を開始体重として固定し、目標体重との差を1kg=7,700kcalで目標カロリー収支へ換算します。保存すると、現在の有効な計画は履歴になります。
       </p>
       {error && <p className="text-sm text-status-bad">{error}</p>}
       <button

@@ -2,6 +2,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -14,10 +15,10 @@ import { CHART_HEIGHT_SM, chartMargin, gridProps, xAxisProps, yAxisProps } from 
 
 interface DeficitChartProps {
   data: ChartDataPoint[];
-  targetDeficit: number | null;
+  targetBalance: number | null;
 }
 
-export default function DeficitChart({ data, targetDeficit }: DeficitChartProps) {
+export default function DeficitChart({ data, targetBalance }: DeficitChartProps) {
   return (
     <ResponsiveContainer width="100%" height={CHART_HEIGHT_SM}>
       <BarChart data={data.slice(-7)} margin={chartMargin}>
@@ -26,26 +27,33 @@ export default function DeficitChart({ data, targetDeficit }: DeficitChartProps)
         <YAxis unit=" kcal" {...yAxisProps} />
         <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--surface-2)' }} />
         <ReferenceLine y={0} stroke="var(--chart-axis)" />
-        {targetDeficit != null && (
+        {targetBalance != null && (
           <ReferenceLine
-            y={targetDeficit}
+            y={targetBalance}
             stroke="var(--chart-target)"
             strokeDasharray="4 4"
             label={{
-              value: '必要赤字',
+              value: '目標収支',
               fill: 'var(--text-muted)',
               fontSize: 11,
               position: 'insideTopRight',
             }}
           />
         )}
-        <Bar
-          dataKey="deficit"
-          name="赤字"
-          fill="var(--status-good)"
-          maxBarSize={24}
-          radius={[4, 4, 0, 0]}
-        />
+        <Bar dataKey="calorieBalance" name="カロリー収支" maxBarSize={24} radius={[4, 4, 0, 0]}>
+          {data.slice(-7).map((entry) => (
+            <Cell
+              key={entry.date}
+              fill={
+                entry.calorieBalance == null
+                  ? 'var(--status-none)'
+                  : entry.calorieBalance <= 0
+                    ? 'var(--status-good)'
+                    : 'var(--status-bad)'
+              }
+            />
+          ))}
+        </Bar>
       </BarChart>
     </ResponsiveContainer>
   );

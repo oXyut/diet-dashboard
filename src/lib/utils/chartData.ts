@@ -15,7 +15,8 @@ export interface ChartDataPoint {
   fat: number | null | undefined;
   carbohydrate: number | null | undefined;
   intakeCalories: number | null;
-  deficit: number | null;
+  /** 摂取 - 消費。負の値は消費が摂取を上回る状態、正の値は摂取超過。 */
+  calorieBalance: number | null;
   weightAverage: number | null;
   targetWeight?: number;
   linearTarget?: number;
@@ -70,9 +71,9 @@ export function buildChartData(
       fat: item.fatG,
       carbohydrate: item.carbohydrateG,
       intakeCalories,
-      deficit:
+      calorieBalance:
         item.totalCalories != null && intakeCalories != null
-          ? item.totalCalories - intakeCalories
+          ? intakeCalories - item.totalCalories
           : null,
       weightAverage: rollingAverages.get(item.date) ?? null,
     };

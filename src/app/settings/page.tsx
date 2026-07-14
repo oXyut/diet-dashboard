@@ -23,7 +23,7 @@ export default async function SettingsPage() {
       <section className="mt-5 rounded-xl border border-line bg-surface p-5 sm:p-7">
         <h1 className="text-2xl font-bold text-ink">減量計画を設定</h1>
         <p className="mt-2 text-sm text-ink-muted">
-          体重目標から必要なカロリー赤字を自動で計算します。
+          体重目標から目標カロリー収支を自動で計算します。
         </p>
         <div className="mt-7">
           <GoalSettingsForm goal={goal ? formatGoal(goal) : null} />
