@@ -11,7 +11,6 @@ import { getYesterdayInJST } from '@/lib/utils/dateUtils';
 import { calculateWeeklyWeightPace } from '@/lib/utils/dietStatus';
 import { averageRecentWeight, isPlanGoal, requiredDailyDeficit } from '@/lib/utils/planCalculator';
 import { calculateWeeklyReview, PfcIssue, ReviewTone } from '@/lib/utils/weeklyReview';
-import Footer from './Footer';
 import RangeSelector, { ChartRange } from './RangeSelector';
 import SectionCard from './SectionCard';
 import { StatusBadge, StatusTone } from './StatusBadge';
@@ -396,7 +395,6 @@ export default function Dashboard({ healthData, goals }: DashboardProps) {
             </Link>
           </section>
         </main>
-        <Footer />
       </div>
     );
   }
@@ -730,7 +728,6 @@ export default function Dashboard({ healthData, goals }: DashboardProps) {
           )}
         </DetailModal>
       </main>
-      <Footer />
     </div>
   );
 }
