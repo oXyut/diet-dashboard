@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ZodError } from 'zod';
 import { PrismaHealthDataRepository } from '@/lib/repositories/implementations/PrismaHealthDataRepository';
 import { HealthDataService } from '@/lib/services/HealthDataService';
-import { withAuth, withHealthWriteAuth } from '@/lib/middleware/auth';
+import { withHealthReadAuth, withHealthWriteAuth } from '@/lib/middleware/auth';
 import { formatHealthData } from '@/lib/formatters';
 import { parseRequestBody } from '@/lib/utils/requestParser';
 import { normalizeRequestBody } from '@/lib/utils/dateNormalizer';
@@ -11,9 +11,9 @@ import { normalizeRequestBody } from '@/lib/utils/dateNormalizer';
 const repository = new PrismaHealthDataRepository();
 const service = new HealthDataService(repository);
 
-// 健康データはPIIのため読み取りにもAPIキーを必須にする。
+// ペアリング済みiPhoneは、POST後にGETでサーバー保存済みの更新日時を確認する。
 // ダッシュボードはこのAPIを経由せず、サーバーコンポーネントでサービス層を直接呼ぶ。
-export const GET = withAuth(async () => {
+export const GET = withHealthReadAuth(async () => {
   try {
     const data = await service.getHealthData({ take: 100 });
 

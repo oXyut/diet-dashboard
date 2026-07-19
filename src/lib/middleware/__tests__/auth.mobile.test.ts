@@ -12,7 +12,7 @@ vi.mock('@/lib/prisma', () => ({
 
 vi.mock('@/lib/mobileCredentials', () => ({ hashDeviceToken: () => 'hashed-token' }));
 
-import { withHealthWriteAuth } from '../auth';
+import { withHealthReadAuth, withHealthWriteAuth } from '../auth';
 
 const previousApiKey = process.env.API_SECRET_KEY;
 const previousPepper = process.env.MOBILE_TOKEN_PEPPER;
@@ -71,5 +71,32 @@ describe('withHealthWriteAuth', () => {
     );
 
     expect(response.status).toBe(401);
+  });
+});
+
+describe('withHealthReadAuth', () => {
+  const handler = vi.fn(async () => NextResponse.json({ ok: true }));
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.env.API_SECRET_KEY = 'existing-api-key';
+    process.env.MOBILE_TOKEN_PEPPER = 'pepper';
+  });
+
+  it('有効な端末トークンで同期結果の確認を許可する', async () => {
+    mocks.findUnique.mockResolvedValue({ id: 'device-id', revokedAt: null });
+    mocks.update.mockResolvedValue({});
+
+    const response = await withHealthReadAuth(handler)(
+      new NextRequest('http://localhost/api/health', {
+        headers: { Authorization: 'Bearer device-token' },
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.update).toHaveBeenCalledWith({
+      where: { id: 'device-id' },
+      data: { lastUsedAt: expect.any(Date) },
+    });
   });
 });
