@@ -31,7 +31,13 @@ export const POST = withAuth(async (request: NextRequest) => {
         sourceDate: new Date(`${body.sourceDate}T00:00:00.000Z`),
       },
       update: {
-        ...body,
+        status: body.status,
+        predictionKg: body.predictionKg,
+        interpretationKg: body.interpretationKg,
+        validationMaeKg: body.validationMaeKg,
+        modelVersion: body.modelVersion,
+        mlflowRunId: body.mlflowRunId,
+        topContributions: body.topContributions,
         sourceDate: new Date(`${body.sourceDate}T00:00:00.000Z`),
       },
     });
