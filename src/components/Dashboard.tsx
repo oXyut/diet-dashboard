@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { AlertCircle, CheckCircle2, ChevronRight, Minus, Settings, X } from 'lucide-react';
-import { Goal, HealthData, WeightPrediction } from '@/types/health';
+import { Goal, HealthData } from '@/types/health';
 import { buildChartData } from '@/lib/utils/chartData';
 import { getYesterdayInJST } from '@/lib/utils/dateUtils';
 import { calculateWeeklyWeightPace } from '@/lib/utils/dietStatus';
@@ -22,7 +22,6 @@ import WeightChart from './charts/WeightChart';
 interface DashboardProps {
   healthData: HealthData[];
   goals: Goal[];
-  prediction: WeightPrediction | null;
 }
 type DetailPanel = 'calories' | 'pfc' | 'steps' | null;
 
@@ -321,50 +320,6 @@ function DetailModal({
   );
 }
 
-function PredictionCard({ prediction }: { prediction: WeightPrediction | null }) {
-  if (!prediction || prediction.status !== 'ready' || prediction.predictionKg == null) {
-    const label = prediction?.status === 'awaiting_training' ? '初回学習を待機中' : 'データ不足';
-    return (
-      <SectionCard title="翌日の体重予測">
-        <p className="text-xl font-semibold text-ink-muted">—</p>
-        <p className="mt-2 text-xs text-ink-muted">
-          {label}（体重を30日以上記録すると利用できます）
-        </p>
-      </SectionCard>
-    );
-  }
-
-  return (
-    <SectionCard title="翌日の体重予測" action={<span className="text-xs text-ink-muted">ML</span>}>
-      <p className="text-2xl font-semibold text-ink">
-        {prediction.predictionKg.toFixed(1)}
-        <span className="ml-1 text-sm font-medium text-ink-secondary">kg</span>
-      </p>
-      <p className="mt-2 text-xs text-ink-muted">
-        {format(parseISO(prediction.targetDate), 'M月d日', { locale: ja })} の予測 ・ 検証MAE{' '}
-        {prediction.validationMaeKg?.toFixed(2) ?? '—'} kg
-      </p>
-      <details className="mt-3 text-xs text-ink-secondary">
-        <summary className="cursor-pointer font-medium text-accent">予測に影響した要因</summary>
-        <ul className="mt-2 space-y-1">
-          {prediction.topContributions.map((item) => (
-            <li key={item.feature} className="flex justify-between gap-3">
-              <span>{item.feature}</span>
-              <span>
-                {item.contribution_kg > 0 ? '+' : ''}
-                {item.contribution_kg.toFixed(3)} kg
-              </span>
-            </li>
-          ))}
-        </ul>
-      </details>
-      <p className="mt-3 text-[10px] text-ink-muted">
-        更新: {format(parseISO(prediction.updatedAt), 'M/d HH:mm', { locale: ja })}
-      </p>
-    </SectionCard>
-  );
-}
-
 function DetailRow({
   label,
   value,
@@ -388,7 +343,7 @@ function DetailRow({
   );
 }
 
-export default function Dashboard({ healthData, goals, prediction }: DashboardProps) {
+export default function Dashboard({ healthData, goals }: DashboardProps) {
   const [range, setRange] = useState<ChartRange>(90);
   const [detailPanel, setDetailPanel] = useState<DetailPanel>(null);
   const activeGoal = goals[0] ?? null;
@@ -639,7 +594,6 @@ export default function Dashboard({ healthData, goals, prediction }: DashboardPr
             </p>
             <p className="mt-4 text-xs font-medium text-accent">クリックして詳細を見る</p>
           </SectionCard>
-          <PredictionCard prediction={prediction} />
         </div>
 
         <DailyCheck review={review} targetBalance={targetDailyBalance} />

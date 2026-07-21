@@ -5,7 +5,7 @@ import { fetchDashboardData } from '@/lib/dashboardData';
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  const { healthData, goals, prediction } = await fetchDashboardData();
+  const { healthData, goals } = await fetchDashboardData();
 
-  return <Dashboard healthData={healthData} goals={goals} prediction={prediction} />;
+  return <Dashboard healthData={healthData} goals={goals} />;
 }
