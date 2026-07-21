@@ -1,0 +1,9 @@
+FROM apache/airflow:slim-3.3.0-python3.13
+
+RUN pip install --no-cache-dir uv asyncpg psycopg2-binary
+
+COPY --chown=airflow:root weight-ml /opt/weight-ml
+RUN cd /opt/weight-ml && uv sync --frozen --no-dev
+
+ENV PATH="/home/airflow/.local/bin:/opt/weight-ml/.venv/bin:${PATH}"
+ENV PYTHONPATH="/opt/weight-ml/src:/opt/weight-ml/.venv/lib/python3.13/site-packages:${PYTHONPATH}"

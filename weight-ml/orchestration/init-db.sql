@@ -1,0 +1,2 @@
+CREATE USER mlflow WITH PASSWORD 'mlflow';
+CREATE DATABASE mlflow OWNER mlflow;

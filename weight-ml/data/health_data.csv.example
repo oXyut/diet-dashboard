@@ -1,0 +1,4 @@
+date,weight,bodyFatPercentage,muscleMass,steps,activeCalories,restingCalories,totalCalories,dietaryCalories,proteinG,fatG,carbohydrateG,fiberG,sugarG,sodiumMg
+2026-07-01,73.8,23.1,55.0,8100,440,1650,2090,1900,118,57,210,23,45,2200
+2026-07-02,73.7,23.2,54.9,9200,500,1650,2150,1820,125,49,195,26,38,1850
+2026-07-03,73.8,23.0,55.1,6500,350,1650,2000,2050,105,70,235,19,60,2800

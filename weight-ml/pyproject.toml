@@ -1,0 +1,33 @@
+[project]
+name = "weight-ml"
+version = "0.1.0"
+description = "体重の翌日予測と解釈用モデル"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+  # Airflow 3.3.0 の内部 API と同じ版に揃える（MLflow が新しすぎる版を解決しないようにする）。
+  "fastapi==0.136.3",
+  "joblib>=1.4,<2",
+  "mlflow-skinny>=3.3,<4",
+  "numpy>=1.26,<3",
+  "pandas>=2.2,<4",
+  "psycopg2-binary>=2.9,<3",
+  "requests>=2.32,<3",
+  "scikit-learn>=1.5,<2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<9"]
+mlflow-server = ["mlflow>=3.3,<4"]
+
+[project.scripts]
+train-weight-model = "weight_ml.train:main"
+predict-weight = "weight_ml.predict:main"
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

@@ -39,6 +39,26 @@ export interface WeightTrend {
   changePercentage: number;
 }
 
+export interface WeightPredictionContribution {
+  feature: string;
+  contribution_kg: number;
+}
+
+export interface WeightPrediction {
+  id: string;
+  targetDate: string;
+  sourceDate: string;
+  status: 'ready' | 'insufficient_data' | 'awaiting_training';
+  predictionKg: number | null;
+  interpretationKg: number | null;
+  validationMaeKg: number | null;
+  modelVersion: string | null;
+  mlflowRunId: string | null;
+  topContributions: WeightPredictionContribution[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Goal {
   id: string;
   name: string;

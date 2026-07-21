@@ -36,6 +36,23 @@ model HealthData {
   @@map("health_data")
 }
 
+model WeightPrediction {
+  id                    String   @id @default(uuid()) @db.Uuid
+  targetDate            DateTime @unique @map("target_date") @db.Date
+  sourceDate            DateTime @map("source_date") @db.Date
+  status                String   @default("ready") @db.String(32)
+  predictionKg          Decimal? @map("prediction_kg") @db.Decimal(5, 2)
+  interpretationKg      Decimal? @map("interpretation_kg") @db.Decimal(5, 2)
+  validationMaeKg       Decimal? @map("validation_mae_kg") @db.Decimal(6, 4)
+  modelVersion          String?  @map("model_version") @db.String(64)
+  mlflowRunId           String?  @map("mlflow_run_id") @db.String(64)
+  topContributions      Json?    @map("top_contributions")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  @@map("weight_predictions")
+}
+
 model Goal {
   id                      String   @id @default(uuid()) @db.Uuid
   name                    String   @db.String(100)

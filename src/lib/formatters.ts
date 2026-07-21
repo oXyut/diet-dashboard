@@ -1,5 +1,9 @@
-import { HealthData as PrismaHealthData, Goal as PrismaGoal } from '@prisma/client';
-import { HealthData, Goal } from '@/types/health';
+import {
+  HealthData as PrismaHealthData,
+  Goal as PrismaGoal,
+  WeightPrediction as PrismaWeightPrediction,
+} from '@prisma/client';
+import { HealthData, Goal, WeightPrediction, WeightPredictionContribution } from '@/types/health';
 
 // Prismaの行をフロントエンド/APIレスポンス共通のJSON形式へ変換する
 export function formatHealthData(row: PrismaHealthData): HealthData {
@@ -53,5 +57,41 @@ export function formatGoal(goal: PrismaGoal): Goal {
     is_active: goal.isActive,
     created_at: goal.createdAt.toISOString(),
     updated_at: goal.updatedAt.toISOString(),
+  };
+}
+
+export function formatWeightPrediction(row: PrismaWeightPrediction): WeightPrediction {
+  const contributions: WeightPredictionContribution[] = Array.isArray(row.topContributions)
+    ? row.topContributions.flatMap((item) => {
+        if (
+          typeof item !== 'object' ||
+          item === null ||
+          typeof (item as { feature?: unknown }).feature !== 'string' ||
+          typeof (item as { contribution_kg?: unknown }).contribution_kg !== 'number'
+        ) {
+          return [];
+        }
+        return [
+          {
+            feature: (item as { feature: string }).feature,
+            contribution_kg: (item as { contribution_kg: number }).contribution_kg,
+          },
+        ];
+      })
+    : [];
+
+  return {
+    id: row.id,
+    targetDate: row.targetDate.toISOString().slice(0, 10),
+    sourceDate: row.sourceDate.toISOString().slice(0, 10),
+    status: row.status as WeightPrediction['status'],
+    predictionKg: row.predictionKg == null ? null : Number(row.predictionKg),
+    interpretationKg: row.interpretationKg == null ? null : Number(row.interpretationKg),
+    validationMaeKg: row.validationMaeKg == null ? null : Number(row.validationMaeKg),
+    modelVersion: row.modelVersion,
+    mlflowRunId: row.mlflowRunId,
+    topContributions: contributions,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
   };
 }

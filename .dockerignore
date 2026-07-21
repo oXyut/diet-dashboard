@@ -1,0 +1,8 @@
+.git
+.next
+node_modules
+weight-ml/.venv
+weight-ml/.pytest_cache
+weight-ml/artifacts
+weight-ml/__pycache__
+**/__pycache__

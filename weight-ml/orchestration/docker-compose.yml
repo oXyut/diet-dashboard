@@ -1,0 +1,112 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow -d airflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mlflow:
+    build:
+      context: ../..
+      dockerfile: weight-ml/orchestration/Dockerfile.mlflow
+    environment:
+      MLFLOW_BACKEND_STORE_URI: postgresql://mlflow:mlflow@postgres:5432/mlflow
+    ports:
+      - "5001:5000"
+    volumes:
+      - mlflow-artifacts:/mlflow/artifacts
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  airflow-init:
+    image: diet-dashboard-airflow:local
+    build:
+      context: ../..
+      dockerfile: weight-ml/orchestration/Dockerfile.airflow
+    environment: &airflow-env
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${POSTGRES_PASSWORD}@postgres:5432/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      # ローカルでは、新しく検出したDAGをすぐ実行可能にする。
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "false"
+      # Airflow 3 のタスク実行プロセスは API Server を経由する。
+      # コンテナ自身の localhost ではなく、Compose サービス名を指定する。
+      AIRFLOW__API__BASE_URL: http://airflow-api-server:8080
+      # 全Airflowサービスで署名鍵を共有し、内部実行APIのJWTを検証可能にする。
+      AIRFLOW__API__SECRET_KEY: ${AIRFLOW_FERNET_KEY}
+      AIRFLOW__API_AUTH__JWT_SECRET: ${AIRFLOW_API_JWT_SECRET:-${AIRFLOW_FERNET_KEY}}
+      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY}
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS: ${AIRFLOW_ADMIN_USERNAME}:${AIRFLOW_ADMIN_PASSWORD}
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS: "true"
+      HEALTH_API_BASE_URL: ${HEALTH_API_BASE_URL}
+      HEALTH_API_KEY: ${HEALTH_API_KEY}
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    command: airflow db migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  airflow-api-server:
+    image: diet-dashboard-airflow:local
+    build:
+      context: ../..
+      dockerfile: weight-ml/orchestration/Dockerfile.airflow
+    environment: *airflow-env
+    command: api-server
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags:ro
+      - airflow-logs:/opt/airflow/logs
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+      mlflow:
+        condition: service_started
+
+  airflow-scheduler:
+    image: diet-dashboard-airflow:local
+    build:
+      context: ../..
+      dockerfile: weight-ml/orchestration/Dockerfile.airflow
+    environment: *airflow-env
+    command: scheduler
+    volumes:
+      - ./dags:/opt/airflow/dags:ro
+      - airflow-logs:/opt/airflow/logs
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+      mlflow:
+        condition: service_started
+
+  airflow-dag-processor:
+    image: diet-dashboard-airflow:local
+    build:
+      context: ../..
+      dockerfile: weight-ml/orchestration/Dockerfile.airflow
+    environment: *airflow-env
+    command: dag-processor
+    volumes:
+      - ./dags:/opt/airflow/dags:ro
+      - airflow-logs:/opt/airflow/logs
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+      mlflow:
+        condition: service_started
+
+volumes:
+  postgres-data:
+  mlflow-artifacts:
+  airflow-logs:

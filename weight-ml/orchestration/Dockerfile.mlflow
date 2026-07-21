@@ -1,0 +1,10 @@
+FROM python:3.13-slim
+
+RUN pip install --no-cache-dir uv
+COPY weight-ml /opt/weight-ml
+WORKDIR /opt/weight-ml
+RUN uv sync --frozen --no-dev --extra mlflow-server
+
+ENV PATH="/opt/weight-ml/.venv/bin:${PATH}"
+EXPOSE 5000
+CMD ["mlflow", "server", "--host", "0.0.0.0", "--port", "5000", "--backend-store-uri", "postgresql://mlflow:mlflow@postgres:5432/mlflow", "--serve-artifacts", "--artifacts-destination", "/mlflow/artifacts"]
