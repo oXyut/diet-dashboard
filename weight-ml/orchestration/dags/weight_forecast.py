@@ -77,7 +77,9 @@ def weight_forecast() -> None:
         publish_prediction(API_BASE_URL, API_KEY, payload)
         return payload
 
-    train_predict_publish(fetch(), "{{ logical_date }}")
+    # Airflow 3 の手動実行では logical_date がテンプレート変数に存在しないため、
+    # DAG Run オブジェクト経由で安全に渡す。未指定時はタスク側で現在時刻を使う。
+    train_predict_publish(fetch(), "{{ dag_run.logical_date or '' }}")
 
 
 weight_forecast()
